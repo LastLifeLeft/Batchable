@@ -26,6 +26,7 @@
 		SetGadgetAttribute(Button, #PB_Canvas_Cursor, #PB_Cursor_Hand)
 		SetGadgetColor(Button, UITK::#Color_Parent, SetAlpha(Parent, 255))
 		SetGadgetColor(Button, UITK::#Color_Back_Cold, SetAlpha(BackCold, 255))
+		SetGadgetColor(Button, UITK::#Color_Back_Disabled, SetAlpha(BackCold, 255))
 		SetGadgetColor(Button, UITK::#Color_Back_Warm, SetAlpha(FixColor(Back_Warm), 255))
 		SetGadgetColor(Button, UITK::#Color_Back_Hot, SetAlpha(FixColor(BackHot), 255))
 		SetGadgetColor(Button, UITK::#Color_Text_Warm, SetAlpha(FixColor(TextWarm), 255))
@@ -51,11 +52,13 @@
 		*Data.OriginalImageInfo
 	EndStructure
 	
-	Global Window, ImageList, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, EffectList, ButtonAddEffect, ButtonSetupEffect, ButtonRemoveEffect, ButtonProcess
+	Global Window, ImageList, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, FilterList, ButtonAddFilter, ButtonSetupFilter, ButtonRemoveFilter, ButtonProcess
 	Global MaterialFont = FontID(LoadFont(#PB_Any, "Material Design Icons Desktop", 18, #PB_Font_HighQuality))
 	Global BoldFont = FontID(LoadFont(#PB_Any, "Segoe UI", 9, #PB_Font_HighQuality | #PB_Font_Bold))
 	Global ImageLoading, ImageError
 	Global PreviewMutex, PreviewThread, NewList PreviewList.PreviewLoading()
+	
+	#SupportedFileTypes = "jpgjpegpngbmptifftgagif"
 	
 	PreviewMutex = CreateMutex()
 	
@@ -94,7 +97,14 @@
 	; Private procedures declaration
 	Declare VerticalList_ItemRedraw(*Item.VerticalListItem, X, Y, Width, Height, State)
 	Declare Handler_Drop()
+	Declare Handler_AddImage()
+	Declare Handler_AddFolder()
+	Declare Handler_RemoveImage()
+	Declare Handler_ImageList()
+	Declare Handler_FilterList()
 	Declare Thread_LoadPreview(Null)
+	Declare AddImageToQueue(File.s)
+	Declare.s BrowseFolder(Folder.s)
 	
 	;{ Public procedures
 	Procedure Open()
@@ -106,31 +116,39 @@
 		SetGadgetAttribute(ImageList, UITK::#Properties_CornerRadius, 5)
 		SetGadgetAttribute(ImageList, UITK::#Properties_ItemHeight, 90)
 		EnableGadgetDrop(ImageList, #PB_Drop_Files, #PB_Drag_Move)
+		BindGadgetEvent(ImageList, @Handler_ImageList(), #PB_EventType_Change)
 		
 		ButtonAddImage = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "󰡼")
 		SetButtonColor(ButtonAddImage, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add images...")
+		BindGadgetEvent(ButtonAddImage, @Handler_AddImage(), #PB_EventType_Change)
 		
 		ButtonAddFolder = UITK::Button(#PB_Any, #Iconbar_Offset * 2 + #Iconbar_Size, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "󰉗")
 		SetButtonColor(ButtonAddFolder, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add folder...")
+		BindGadgetEvent(ButtonAddFolder, @Handler_AddFolder(), #PB_EventType_Change)
 		
 		ButtonRemoveImage = UITK::Button(#PB_Any, #Iconbar_Offset * 3 + #Iconbar_Size * 2, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "󱐘")
 		SetButtonColor(ButtonRemoveImage, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $D83C3E, $E06365, $FAFAFB, $FAFAFB, "Remove selected image")
-		
+		BindGadgetEvent(ButtonRemoveImage, @Handler_RemoveImage(), #PB_EventType_Change)
+		UITK::Disable(ButtonRemoveImage, #True)
 		CloseGadgetList()
 		
-		EffectList = UITK::VerticalList(#PB_Any, #Window_Margin * 2 + #ImageList_Width, #MenuBar_Height + #Window_Margin, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2, UITK::#VList_Toolbar)
-		ButtonAddEffect = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "󱓐")
-		SetButtonColor(ButtonAddEffect, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add effect...")
+		FilterList = UITK::VerticalList(#PB_Any, #Window_Margin * 2 + #ImageList_Width, #MenuBar_Height + #Window_Margin, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2, UITK::#VList_Toolbar)
+		SetGadgetAttribute(FilterList, UITK::#Properties_CornerRadius, 5)
+		BindGadgetEvent(FilterList, @Handler_FilterList(), #PB_EventType_Change)
 		
-		ButtonSetupEffect = UITK::Button(#PB_Any, #Iconbar_Offset * 2 + #Iconbar_Size, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "󱓓")
-		SetButtonColor(ButtonSetupEffect, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Effect settings...")
+		ButtonAddFilter = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "󱓐")
+		SetButtonColor(ButtonAddFilter, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add Filter...")
 		
-		ButtonRemoveEffect = UITK::Button(#PB_Any, #Iconbar_Offset * 3 + #Iconbar_Size * 2, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "󱓒")
-		SetButtonColor(ButtonRemoveEffect, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $D83C3E, $E06365, $FAFAFB, $FAFAFB, "Remove selected effect")
+		ButtonSetupFilter = UITK::Button(#PB_Any, #Iconbar_Offset * 2 + #Iconbar_Size, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "󱓓")
+		SetButtonColor(ButtonSetupFilter, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Filter settings...")
+		
+		ButtonRemoveFilter = UITK::Button(#PB_Any, #Iconbar_Offset * 3 + #Iconbar_Size * 2, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "󱓒")
+		SetButtonColor(ButtonRemoveFilter, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $D83C3E, $E06365, $FAFAFB, $FAFAFB, "Remove selected Filter")
+		UITK::Disable(ButtonRemoveFilter, #True)
 		
 		ButtonProcess = UITK::Button(#PB_Any, #Iconbar_Offset * 4 + #Iconbar_Size * 3, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "󰐊")
 		SetButtonColor(ButtonProcess, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $3AA55D, $6BD08B, $FAFAFB, $FAFAFB, "Start")
-		
+		UITK::Disable(ButtonProcess, #True)
 		CloseGadgetList()
 	EndProcedure
 	;}
@@ -170,33 +188,51 @@
 	EndProcedure
 	
 	Procedure Handler_Drop()
-		Protected DropFiles.s, File.s, Path.s, Count, Loop, *Data.OriginalImageInfo
-		DropFiles = EventDropFiles()
-		Count = CountString(DropFiles, #LF$) + 1
+		AddImageToQueue(EventDropFiles())
+	EndProcedure
+	
+	Procedure Handler_AddImage()
+		Protected Result.s, File.s
+		          
+		File = OpenFileRequester("Choose images to add the the queue", "", "Supported files | *.jpg;*.jpeg;*.png;*.bmp;*.tif;*.tiff;*.tga;*.gif | All files | *.*", 0, #PB_Requester_MultiSelection)
 		
-		LockMutex(PreviewMutex)
-		LastElement(PreviewList())
-		
-		For Loop = 1 To Count
-			File = StringField(DropFiles, Loop, #LF$)
-			AddGadgetItem(ImageList, -1, GetFilePart(File))
-			*Data = AllocateStructure(OriginalImageInfo)
-			*Data\ImageID = ImageID(ImageLoading)
-			*Data\Information = "Loading..."
-			Path = GetPathPart(File)
-			*Data\Path = Left(Path, Len(Path) -1)
+		If File
+			Result = File
+			File = NextSelectedFileName()
 			
-			SetGadgetItemData(ImageList, CountGadgetItems(ImageList) - 1, *Data)
-			AddElement(PreviewList())
-			PreviewList()\Data = *Data
-			PreviewList()\File = File
- 		Next
- 		
- 		If PreviewThread = 0
- 			PreviewThread = CreateThread(@Thread_LoadPreview(), #Null)
- 		EndIf
- 		
- 		UnlockMutex(PreviewMutex)
+			While File
+				Result + #LF$ + File
+				File = NextSelectedFileName()
+			Wend
+			
+			AddImageToQueue(Result)
+		EndIf
+	EndProcedure
+	
+	Procedure Handler_AddFolder()
+		Protected Folder.s, Result.s
+		
+		Folder = PathRequester("Choose a folder to add to the queue", "")
+		
+		Debug Folder
+	EndProcedure
+	
+	Procedure Handler_RemoveImage()
+		
+	EndProcedure
+	
+	Procedure Handler_ImageList()
+		Protected State = GetGadgetState(ImageList)
+		
+		If State = -1
+			UITK::Disable(ButtonRemoveImage, #True)
+		Else
+			UITK::Disable(ButtonRemoveImage, #False)
+		EndIf
+	EndProcedure
+	
+	Procedure Handler_FilterList()
+		
 	EndProcedure
 	
 	Procedure Thread_LoadPreview(Null)
@@ -250,6 +286,44 @@
 		
 		Until Finished
 	EndProcedure
+	
+	Procedure AddImageToQueue(FileList.s)
+		Protected File.s, Path.s, Count, Loop, *Data.OriginalImageInfo, NewImageToProcess
+		
+		Count = CountString(FileList, #LF$) + 1
+		
+		LockMutex(PreviewMutex)
+		LastElement(PreviewList())
+		
+		For Loop = 1 To Count
+			File = StringField(FileList, Loop, #LF$)
+			
+			If FindString(#SupportedFileTypes, LCase(GetExtensionPart(File)))
+				NewImageToProcess = #True
+				AddGadgetItem(ImageList, -1, GetFilePart(File))
+				*Data = AllocateStructure(OriginalImageInfo)
+				*Data\ImageID = ImageID(ImageLoading)
+				*Data\Information = "Loading..."
+				Path = GetPathPart(File)
+				*Data\Path = Left(Path, Len(Path) -1)
+				
+				SetGadgetItemData(ImageList, CountGadgetItems(ImageList) - 1, *Data)
+				AddElement(PreviewList())
+				PreviewList()\Data = *Data
+				PreviewList()\File = File
+			EndIf
+ 		Next
+ 		
+ 		If PreviewThread = 0 And NewImageToProcess
+ 			PreviewThread = CreateThread(@Thread_LoadPreview(), #Null)
+ 		EndIf
+ 		
+ 		UnlockMutex(PreviewMutex)
+	EndProcedure
+	
+	Procedure.s BrowseFolder(Folder.s)
+		
+	EndProcedure
 	;}
 	
 	DataSection
@@ -257,8 +331,15 @@
 		IncludeBinary "../Media/Icon/Icon18.png"
 	EndDataSection
 EndModule
+
+
+
+
+
+
+
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 247
-; FirstLine = 61
-; Folding = tV+
+; CursorPosition = 229
+; FirstLine = 80
+; Folding = tdQ5
 ; EnableXP
