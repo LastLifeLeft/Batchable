@@ -55,10 +55,10 @@
 	Global Window, ImageList, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, FilterList, ButtonAddFilter, ButtonSetupFilter, ButtonRemoveFilter, ButtonProcess
 	Global MaterialFont = FontID(LoadFont(#PB_Any, "Material Design Icons Desktop", 18, #PB_Font_HighQuality))
 	Global BoldFont = FontID(LoadFont(#PB_Any, "Segoe UI", 9, #PB_Font_HighQuality | #PB_Font_Bold))
-	Global ImageLoading, ImageError
+	Global ImageLoading, ImageError, ImageLoadingID
 	Global PreviewMutex, PreviewThread, NewList PreviewList.PreviewLoading()
 	
-	#SupportedFileTypes = "jpgjpegpngbmptifftgagif"
+	#SupportedFileTypes = "jpgjpegpngbmptifftga"
 	
 	PreviewMutex = CreateMutex()
 	
@@ -75,6 +75,7 @@
 	AddPathLine(10, -10, #PB_Path_Relative)
 	StrokePath(3)
 	StopVectorDrawing()
+	ImageLoadingID = ImageID(ImageLoading)
 	
 	ImageError = CreateImage(#PB_Any, 94, 70, 24, FixColor($202225))
 	StartVectorDrawing(ImageVectorOutput(ImageError))
@@ -164,26 +165,26 @@
 			DrawVectorImage(*Item\Data\ImageID)
 			
 			MovePathCursor(X + 113, Y + 15)
-			DrawVectorParagraph("Name:", 200, 50)
+			DrawVectorParagraph("Name:", 200, 20)
 			NameWidth = VectorTextWidth("Name:")
 			
 			MovePathCursor(X + 113, Y + 36)
-			DrawVectorParagraph("Path:", 200, 50)
+			DrawVectorParagraph("Path:", 200, 20)
 			PathWidth = VectorTextWidth("Path:")
 			
 			MovePathCursor(X + 113, Y + 57)
-			DrawVectorParagraph("Informations:", 200, 50)
+			DrawVectorParagraph("Informations:", 200, 20)
 			InformationWidth = VectorTextWidth("Informations:")
 			
 			VectorFont(*Item\Text\FontID)
 			MovePathCursor(X + 118 + NameWidth, Y + 15)
-			DrawVectorParagraph(*Item\Text\Text, 200, 50)
+			DrawVectorParagraph(*Item\Text\Text, 200, 20)
 			
 			MovePathCursor(X + 118 + PathWidth, Y + 36)
-			DrawVectorParagraph(*Item\Data\Path, 200, 50)
+			DrawVectorParagraph(*Item\Data\Path, 200, 20)
 			
 			MovePathCursor(X + 118 + InformationWidth, Y + 57)
-			DrawVectorParagraph(*Item\Data\Information, 200, 50)
+			DrawVectorParagraph(*Item\Data\Information, 200, 20)
 		EndIf
 	EndProcedure
 	
@@ -194,7 +195,7 @@
 	Procedure Handler_AddImage()
 		Protected Result.s, File.s
 		          
-		File = OpenFileRequester("Choose images to add the the queue", "", "Supported files | *.jpg;*.jpeg;*.png;*.bmp;*.tif;*.tiff;*.tga;*.gif | All files | *.*", 0, #PB_Requester_MultiSelection)
+		File = OpenFileRequester("Choose images to add the the queue", "", "Supported files | *.jpg;*.jpeg;*.png;*.bmp;*.tif;*.tiff;*.tga | All files | *.*", 0, #PB_Requester_MultiSelection)
 		
 		If File
 			Result = File
@@ -212,13 +213,28 @@
 	Procedure Handler_AddFolder()
 		Protected Folder.s, Result.s
 		
-		Folder = PathRequester("Choose a folder to add to the queue", "")
+		Folder = PathRequester("Add a folder to the queue", "")
 		
-		Debug Folder
+		If Folder
+			Result = BrowseFolder(Folder)
+		EndIf
+		
+		If Result
+			AddImageToQueue(Result)
+		EndIf
 	EndProcedure
 	
 	Procedure Handler_RemoveImage()
+		Protected State = GetGadgetState(ImageList), *Data.OriginalImageInfo = GetGadgetItemData(ImageList, State)
 		
+		If *Data\ImageID = ImageLoadingID
+			*Data\Image = -1
+		Else
+			FreeStructure(*Data)
+		EndIf
+		
+		RemoveGadgetItem(ImageList, State)
+			
 	EndProcedure
 	
 	Procedure Handler_ImageList()
@@ -251,35 +267,40 @@
 		EndIf
 		UnlockMutex(PreviewMutex)
 		
-		Image = LoadImage(#PB_Any, File)
 		
-		If Image
-			FinalImage = CreateImage(#PB_Any, 94, 70, 24, FixColor($202225))
-			Width = ImageWidth(Image)
-			Height = ImageHeight(Image)
-			*Data\Information = Str(Width)+"*"+Height+" - "+ImageDepth(Image)+"bits"
+		If *Data\Image = 0
+			Image = LoadImage(#PB_Any, File)
 			
-			If ImageWidth(Image) <= 94 And ImageHeight(Image) <= 70
+			If Image
+				FinalImage = CreateImage(#PB_Any, 94, 70, 24, FixColor($202225))
+				Width = ImageWidth(Image)
+				Height = ImageHeight(Image)
+				*Data\Information = Str(Width)+"*"+Height+" - "+ImageDepth(Image)+"bits"
 				
-			ElseIf Round(ImageWidth(Image) / 94, #PB_Round_Nearest) < Round(ImageHeight(Image) / 70, #PB_Round_Nearest)
-				ResizeImage(Image, Round(70 / ImageHeight(Image) * ImageWidth(Image), #PB_Round_Nearest), 70, #PB_Image_Smooth)
+				If ImageWidth(Image) <= 94 And ImageHeight(Image) <= 70
+					
+				ElseIf Round(ImageWidth(Image) / 94, #PB_Round_Nearest) < Round(ImageHeight(Image) / 70, #PB_Round_Nearest)
+					ResizeImage(Image, General::Max(1, Round(70 / ImageHeight(Image) * ImageWidth(Image), #PB_Round_Nearest)), 70, #PB_Image_Smooth)
+				Else
+					ResizeImage(Image, 94, General::Max(1, Round(94 / ImageWidth(Image) * ImageHeight(Image), #PB_Round_Nearest)), #PB_Image_Smooth)
+				EndIf
+				
+				StartDrawing(ImageOutput(FinalImage))
+				DrawAlphaImage(ImageID(Image), (94 - ImageWidth(Image)) * 0.5, (70 - ImageHeight(Image)) * 0.5)
+				StopDrawing()
+				FreeImage(Image)
+				
+				*Data\ImageID = ImageID(FinalImage)
+				*Data\Image = FinalImage
+				
 			Else
-				ResizeImage(Image, 94, Round(94 / ImageWidth(Image) * ImageHeight(Image), #PB_Round_Nearest), #PB_Image_Smooth)
+				*Data\Information = "Couldn't load the image"
+				*Data\ImageID = ImageID(ImageError)
 			EndIf
-			
-			StartDrawing(ImageOutput(FinalImage))
-			DrawAlphaImage(ImageID(Image), (94 - ImageWidth(Image)) * 0.5, (70 - ImageHeight(Image)) * 0.5)
-			StopDrawing()
-			FreeImage(Image)
-			
-			*Data\ImageID = ImageID(FinalImage)
-			*Data\Image = FinalImage
-			
 		Else
-			*Data\Information = "Couldn't load the image"
-			*Data\ImageID = ImageID(ImageError)
+			FreeStructure(*Data)
 		EndIf
-		
+			
 		SetGadgetItemData(ImageList, 0, GetGadgetItemData(ImageList, 0))
 		
 		Delay(10)
@@ -298,19 +319,28 @@
 		For Loop = 1 To Count
 			File = StringField(FileList, Loop, #LF$)
 			
-			If FindString(#SupportedFileTypes, LCase(GetExtensionPart(File)))
-				NewImageToProcess = #True
-				AddGadgetItem(ImageList, -1, GetFilePart(File))
-				*Data = AllocateStructure(OriginalImageInfo)
-				*Data\ImageID = ImageID(ImageLoading)
-				*Data\Information = "Loading..."
-				Path = GetPathPart(File)
-				*Data\Path = Left(Path, Len(Path) -1)
+			If FileSize(File) > -2
+				If FindString(#SupportedFileTypes, LCase(GetExtensionPart(File)))
+					NewImageToProcess = #True
+					AddGadgetItem(ImageList, -1, GetFilePart(File))
+					*Data = AllocateStructure(OriginalImageInfo)
+					*Data\ImageID = ImageLoadingID
+					*Data\Information = "Loading..."
+					Path = GetPathPart(File)
+					*Data\Path = Left(Path, Len(Path) -1)
+					
+					SetGadgetItemData(ImageList, CountGadgetItems(ImageList) - 1, *Data)
+					AddElement(PreviewList())
+					PreviewList()\Data = *Data
+					PreviewList()\File = File
+				EndIf
+			Else
+				If Not (Right(File, 1) = "\" Or Right(File, 1) = "/")
+					File + "\"
+				EndIf
 				
-				SetGadgetItemData(ImageList, CountGadgetItems(ImageList) - 1, *Data)
-				AddElement(PreviewList())
-				PreviewList()\Data = *Data
-				PreviewList()\File = File
+				FileList + BrowseFolder(File)
+				Count = CountString(FileList, #LF$) + 1
 			EndIf
  		Next
  		
@@ -322,7 +352,22 @@
 	EndProcedure
 	
 	Procedure.s BrowseFolder(Folder.s)
+		Protected Directory = ExamineDirectory(#PB_Any, Folder, "*.*"), Result.s, Item.s
 		
+		While NextDirectoryEntry(Directory)
+			Item = DirectoryEntryName(Directory)
+			If Not (Item = "." Or Item = "..")
+				If FileSize(Folder + Item) = -2
+					Result + #LF$ + BrowseFolder(Folder + Item + "/")
+				Else
+					Result + #LF$ + Folder + Item
+				EndIf
+			EndIf
+		Wend
+		
+		FinishDirectory(Directory)
+		
+		ProcedureReturn Result
 	EndProcedure
 	;}
 	
@@ -339,7 +384,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 229
-; FirstLine = 80
-; Folding = tdQ5
+; CursorPosition = 77
+; FirstLine = 5
+; Folding = tVA5
 ; EnableXP
