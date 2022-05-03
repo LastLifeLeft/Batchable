@@ -22,7 +22,7 @@
 	CompilerEndIf
 	
 	Macro SetButtonColor(Button, Parent, BackCold, Back_Warm, BackHot, TextWarm, TextHot, ToolTip)
-		SetGadgetFont(Button, MaterialFont)
+		SetGadgetFont(Button, IconFont)
 		SetGadgetAttribute(Button, #PB_Canvas_Cursor, #PB_Cursor_Hand)
 		SetGadgetColor(Button, UITK::#Color_Parent, SetAlpha(Parent, 255))
 		SetGadgetColor(Button, UITK::#Color_Back_Cold, SetAlpha(BackCold, 255))
@@ -53,7 +53,7 @@
 	EndStructure
 	
 	Global Window, ImageList, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, FilterList, ButtonAddFilter, ButtonSetupFilter, ButtonRemoveFilter, ButtonProcess
-	Global MaterialFont = FontID(LoadFont(#PB_Any, "UITK Icon Font", 18, #PB_Font_HighQuality))
+	Global IconFont = FontID(LoadFont(#PB_Any, "UITK Icon Font", 18, #PB_Font_HighQuality))
 	Global BoldFont = FontID(LoadFont(#PB_Any, "Segoe UI", 9, #PB_Font_HighQuality | #PB_Font_Bold))
 	Global ImageLoading, ImageError, ImageLoadingID
 	Global PreviewMutex, PreviewThread, NewList PreviewList.PreviewLoading()
@@ -97,19 +97,24 @@
 	
 	; Private procedures declaration
 	Declare VerticalList_ItemRedraw(*Item.VerticalListItem, X, Y, Width, Height, State)
+	
 	Declare Handler_Drop()
 	Declare Handler_AddImage()
 	Declare Handler_AddFolder()
 	Declare Handler_RemoveImage()
 	Declare Handler_ImageList()
 	Declare Handler_FilterList()
+	Declare Handler_Close()
+	
 	Declare Thread_LoadPreview(Null)
+	
 	Declare AddImageToQueue(File.s)
 	Declare.s BrowseFolder(Folder.s)
 	
 	;{ Public procedures
 	Procedure Open()
 		Window = UITK::Window(#PB_Any, 0, 0, #Window_Width, #Window_Height, General::#AppName, UITK::#DarkMode | UITK::#Window_CloseButton | #PB_Window_ScreenCentered)
+		BindEvent(#PB_Event_CloseWindow, @Handler_Close(), Window)
 		UITK::SetWindowIcon(Window, CatchImage(#PB_Any, ?Icon))
 		BindEvent(#PB_Event_GadgetDrop, @Handler_Drop())
 		
@@ -142,6 +147,7 @@
 		
 		ButtonSetupFilter = UITK::Button(#PB_Any, #Iconbar_Offset * 2 + #Iconbar_Size, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "g")
 		SetButtonColor(ButtonSetupFilter, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Filter settings...")
+		UITK::Disable(ButtonSetupFilter, #True)
 		
 		ButtonRemoveFilter = UITK::Button(#PB_Any, #Iconbar_Offset * 3 + #Iconbar_Size * 2, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "f")
 		SetButtonColor(ButtonRemoveFilter, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $D83C3E, $E06365, $FAFAFB, $FAFAFB, "Remove selected Filter")
@@ -230,6 +236,10 @@
 		If *Data\ImageID = ImageLoadingID
 			*Data\Image = -1
 		Else
+			If *Data\Image
+				*Data\ImageID = ImageID(ImageError)
+				FreeImage(*Data\Image)
+			EndIf
 			FreeStructure(*Data)
 		EndIf
 		
@@ -249,6 +259,12 @@
 	
 	Procedure Handler_FilterList()
 		
+	EndProcedure
+	
+	Procedure Handler_Close()
+		Protected phandle, Result
+		phandle = OpenProcess_(#PROCESS_TERMINATE, #False, GetCurrentProcessId_()) ;< I clearly have issues with my windows, but killing the process is a valid workaround for my own ineptitude.
+		TerminateProcess_(phandle, @Result)
 	EndProcedure
 	
 	Procedure Thread_LoadPreview(Null)
@@ -383,7 +399,35 @@ EndModule
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 59
-; Folding = tNA5
+; CursorPosition = 121
+; FirstLine = 85
+; Folding = tdAw
 ; EnableXP
