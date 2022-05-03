@@ -52,7 +52,7 @@
 		*Data.OriginalImageInfo
 	EndStructure
 	
-	Global Window, ImageList, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, FilterList, ButtonAddFilter, ButtonSetupFilter, ButtonRemoveFilter, ButtonProcess
+	Global Window, ImageList, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, FilterList, ButtonAddFilter, ButtonSetupFilter, ButtonRemoveFilter, ButtonProcess, AddFilterContainer
 	Global IconFont = FontID(LoadFont(#PB_Any, "UITK Icon Font", 18, #PB_Font_HighQuality))
 	Global BoldFont = FontID(LoadFont(#PB_Any, "Segoe UI", 9, #PB_Font_HighQuality | #PB_Font_Bold))
 	Global ImageLoading, ImageError, ImageLoadingID
@@ -156,6 +156,11 @@
 		ButtonProcess = UITK::Button(#PB_Any, #Iconbar_Offset * 4 + #Iconbar_Size * 3, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "h")
 		SetButtonColor(ButtonProcess, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $3AA55D, $6BD08B, $FAFAFB, $FAFAFB, "Start")
 		UITK::Disable(ButtonProcess, #True)
+		CloseGadgetList()
+		
+		AddFilterContainer = UITK::Container(#PB_Any, #Window_Margin * 2 + #ImageList_Width, #MenuBar_Height + #Window_Margin, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2)
+		SetGadgetAttribute(AddFilterContainer, UITK::#Properties_CornerRadius, 5)
+		HideGadget(AddFilterContainer, #True)
 		CloseGadgetList()
 	EndProcedure
 	;}
@@ -427,7 +432,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 121
-; FirstLine = 85
+; CursorPosition = 163
+; FirstLine = 65
 ; Folding = tdAw
 ; EnableXP
