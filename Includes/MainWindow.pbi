@@ -22,7 +22,8 @@
 	CompilerEndIf
 	
 	Macro SetButtonColor(Button, Parent, BackCold, Back_Warm, BackHot, TextWarm, TextHot, ToolTip)
-		SetGadgetFont(Button, IconFont)
+		SetGadgetFont(Button, UITK::UITKFont)
+		SetGadgetAttribute(Button, UITK::#Attribute_TextScale, 24)
 		SetGadgetAttribute(Button, #PB_Canvas_Cursor, #PB_Cursor_Hand)
 		SetGadgetColor(Button, UITK::#Color_Parent, SetAlpha(Parent, 255))
 		SetGadgetColor(Button, UITK::#Color_Back_Cold, SetAlpha(BackCold, 255))
@@ -53,7 +54,6 @@
 	EndStructure
 	
 	Global Window, ImageList, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, FilterList, ButtonAddFilter, ButtonSetupFilter, ButtonRemoveFilter, ButtonProcess, AddFilterContainer
-	Global IconFont = FontID(LoadFont(#PB_Any, "UITK Icon Font", 18, #PB_Font_HighQuality))
 	Global BoldFont = FontID(LoadFont(#PB_Any, "Segoe UI", 9, #PB_Font_HighQuality | #PB_Font_Bold))
 	Global ImageLoading, ImageError, ImageLoadingID
 	Global PreviewMutex, PreviewThread, NewList PreviewList.PreviewLoading()
@@ -99,11 +99,14 @@
 	Declare VerticalList_ItemRedraw(*Item.VerticalListItem, X, Y, Width, Height, State)
 	
 	Declare Handler_Drop()
+	Declare Handler_ImageList()
 	Declare Handler_AddImage()
 	Declare Handler_AddFolder()
 	Declare Handler_RemoveImage()
-	Declare Handler_ImageList()
+	
 	Declare Handler_FilterList()
+	Declare Handler_AddFilter()
+	
 	Declare Handler_Close()
 	
 	Declare Thread_LoadPreview(Null)
@@ -119,8 +122,8 @@
 		BindEvent(#PB_Event_GadgetDrop, @Handler_Drop())
 		
 		ImageList = UITK::VerticalList(#PB_Any, #Window_Margin, #MenuBar_Height + #Window_Margin, #ImageList_Width, #Window_Height - #MenuBar_Height - #Window_Margin * 2, UITK::#VList_Toolbar, @VerticalList_ItemRedraw())
-		SetGadgetAttribute(ImageList, UITK::#Properties_CornerRadius, 5)
-		SetGadgetAttribute(ImageList, UITK::#Properties_ItemHeight, 90)
+		SetGadgetAttribute(ImageList, UITK::#Attribute_CornerRadius, 5)
+		SetGadgetAttribute(ImageList, UITK::#Attribute_ItemHeight, 90)
 		EnableGadgetDrop(ImageList, #PB_Drop_Files, #PB_Drag_Move)
 		BindGadgetEvent(ImageList, @Handler_ImageList(), #PB_EventType_Change)
 		
@@ -139,11 +142,12 @@
 		CloseGadgetList()
 		
 		FilterList = UITK::VerticalList(#PB_Any, #Window_Margin * 2 + #ImageList_Width, #MenuBar_Height + #Window_Margin, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2, UITK::#VList_Toolbar)
-		SetGadgetAttribute(FilterList, UITK::#Properties_CornerRadius, 5)
+		SetGadgetAttribute(FilterList, UITK::#Attribute_CornerRadius, 5)
 		BindGadgetEvent(FilterList, @Handler_FilterList(), #PB_EventType_Change)
 		
 		ButtonAddFilter = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "e")
 		SetButtonColor(ButtonAddFilter, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add Filter...")
+		BindGadgetEvent(ButtonAddFilter, @Handler_AddFilter(), #PB_EventType_Change)
 		
 		ButtonSetupFilter = UITK::Button(#PB_Any, #Iconbar_Offset * 2 + #Iconbar_Size, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "g")
 		SetButtonColor(ButtonSetupFilter, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Filter settings...")
@@ -159,7 +163,7 @@
 		CloseGadgetList()
 		
 		AddFilterContainer = UITK::Container(#PB_Any, #Window_Margin * 2 + #ImageList_Width, #MenuBar_Height + #Window_Margin, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2)
-		SetGadgetAttribute(AddFilterContainer, UITK::#Properties_CornerRadius, 5)
+		SetGadgetAttribute(AddFilterContainer, UITK::#Attribute_CornerRadius, 5)
 		HideGadget(AddFilterContainer, #True)
 		CloseGadgetList()
 	EndProcedure
@@ -201,6 +205,16 @@
 	
 	Procedure Handler_Drop()
 		AddImageToQueue(EventDropFiles())
+	EndProcedure
+	
+	Procedure Handler_ImageList()
+		Protected State = GetGadgetState(ImageList)
+		
+		If State = -1
+			UITK::Disable(ButtonRemoveImage, #True)
+		Else
+			UITK::Disable(ButtonRemoveImage, #False)
+		EndIf
 	EndProcedure
 	
 	Procedure Handler_AddImage()
@@ -252,18 +266,13 @@
 			
 	EndProcedure
 	
-	Procedure Handler_ImageList()
-		Protected State = GetGadgetState(ImageList)
-		
-		If State = -1
-			UITK::Disable(ButtonRemoveImage, #True)
-		Else
-			UITK::Disable(ButtonRemoveImage, #False)
-		EndIf
-	EndProcedure
-	
 	Procedure Handler_FilterList()
 		
+	EndProcedure
+	
+	Procedure Handler_AddFilter()
+		HideGadget(FilterList, #True)
+		HideGadget(AddFilterContainer, #False)
 	EndProcedure
 	
 	Procedure Handler_Close()
@@ -432,7 +441,6 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 163
-; FirstLine = 65
-; Folding = tdAw
+; CursorPosition = 55
+; Folding = tfAg
 ; EnableXP
