@@ -8,7 +8,50 @@ EndDeclareModule
 
 DeclareModule MainWindow
 	
+	Enumeration ;Task type
+		#TaskType_All
+		#TaskType_Colors
+		#TaskType_Transformation
+		#TaskType_PixelArt
+		#TaskType_Other
+	EndEnumeration
+
 	Declare Open()
+EndDeclareModule
+
+DeclareModule Tasks
+	Enumeration ;Tasks
+		#Task_AlphaThreshold
+		#Task_ChannelSwap
+		#Task_ChannelDisplacement
+		#Task_InvertColor
+		#Task_BlackWhite
+		#Task_ColorBalancing
+		#Task_Posterization
+		#Task_Outline
+		#Task_TrimImage
+		#Task_Resize
+		#Task_Blur
+		#Task_Watermark
+		#Task_Rotsprite
+		#Task_PixelartUpscale
+		#Task_SaveGif
+		#Task_Save
+		
+		#__Task_Count
+	EndEnumeration
+	
+	Prototype Execute(Image, *Settings)
+	
+	Structure TaskData
+		Name.s
+		Description.s
+		IconID.i
+		Type.i
+		Execute.Execute
+	EndStructure
+	
+	Global Dim Task.TaskData(#__Task_Count - 1)
 EndDeclareModule
 
 Module General
@@ -35,6 +78,6 @@ Module General
 	
 EndModule
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 13
-; Folding = P-
+; CursorPosition = 56
+; Folding = O+
 ; EnableXP
