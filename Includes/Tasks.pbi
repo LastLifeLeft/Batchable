@@ -25,7 +25,7 @@
 	Task(#Task_BlackWhite)\Type = MainWindow::#TaskType_Colors
 	Task(#Task_BlackWhite)\IconID = 0
 	
-	Task(#Task_ColorBalancing)\Name = "Color Balancing"
+	Task(#Task_ColorBalancing)\Name = "Color Balance"
 	Task(#Task_ColorBalancing)\Description = "Change the global adjustment of the intensities of the colors."
 	Task(#Task_ColorBalancing)\Type = MainWindow::#TaskType_Colors
 	Task(#Task_ColorBalancing)\IconID = 0
@@ -82,7 +82,7 @@
 
 	
 EndModule
-; IDE Options = PureBasic 6.00 Beta 6 (Windows - x86)
-; CursorPosition = 15
+; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
+; CursorPosition = 27
 ; Folding = -
 ; EnableXP
