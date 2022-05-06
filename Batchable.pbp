@@ -8,20 +8,20 @@
   <section name="data">
     <explorer view="C:\ProgramData\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2022-05-06 07:10" user="Poshu" host="MONSTRO"/>
+    <lastopen date="2022-05-06 10:48" user="Poshu" host="MONSTRO"/>
   </section>
   <section name="files">
     <file name="Includes\General.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="aa6fb1471d630d967ac12fcccb741510"/>
+      <fingerprint md5="dbdc04151bab7019314fd8841fa33e22"/>
     </file>
     <file name="Includes\MainWindow.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="116810a1d18c2ea0bdeca2d5c4e8c7f9"/>
+      <fingerprint md5="50b98069289458129655ac4e78376407"/>
     </file>
     <file name="Includes\Tasks.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="ca2f216ae792a0cd0671469a2376dec4"/>
+      <fingerprint md5="df0caad5763c25874e50104a9dfd19ad"/>
     </file>
     <file name="Main.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>

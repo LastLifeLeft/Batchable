@@ -59,6 +59,7 @@ Module General
 	UseJPEGImageDecoder()
 	UsePNGImageDecoder()
 	UseTGAImageDecoder()
+	UseTIFFImageDecoder()
 	
 	;{ Public procedures
 	Procedure Min(A, B)
@@ -78,6 +79,6 @@ Module General
 	
 EndModule
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 56
+; CursorPosition = 61
 ; Folding = O+
 ; EnableXP

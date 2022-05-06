@@ -252,10 +252,10 @@
 			DrawVectorParagraph(*Item\Text\Text, 200, 20)
 			
 			MovePathCursor(X + 118 + PathWidth, Y + 36)
-			DrawVectorParagraph(*Item\Data\Path, 200, 20)
+			DrawVectorParagraph(*Item\Data\Path, #ImageList_Width - PathWidth - 130, 20)
 			
 			MovePathCursor(X + 118 + InformationWidth, Y + 57)
-			DrawVectorParagraph(*Item\Data\Information, 200, 20)
+			DrawVectorParagraph(*Item\Data\Information, #ImageList_Width - InformationWidth - 130, 20)
 		EndIf
 	EndProcedure
 	
@@ -267,6 +267,8 @@
 			VectorFont(*Item\Text\FontID)
 			MovePathCursor(X + 70, Y + 22)
 			DrawVectorParagraph(*Item\Data\Description, Width - 80, 40)
+			MovePathCursor(X + 10, Y + 5)
+			DrawVectorImage(*Item\Data\ImageID)
 		EndIf
 		
 	EndProcedure
@@ -433,6 +435,7 @@
 				AddGadgetItem(AddTaskList, -1, Tasks::Task(Loop)\Name)
 				*Data = AllocateStructure(AddListInfo)
 				*Data\Description = Tasks::Task(Loop)\Description
+				*Data\ImageID = Tasks::Task(Loop)\IconID
 				SetGadgetItemData(AddTaskList, CountGadgetItems(AddTaskList) - 1, *Data)
 			EndIf
 		Next
@@ -542,7 +545,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 108
-; FirstLine = 60
-; Folding = tdBA5
+; CursorPosition = 252
+; FirstLine = 84
+; Folding = t2BA6
 ; EnableXP
