@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 6.00 Beta 6 (Windows - x64)">
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 6.00 Beta 6 (Windows - x86)">
   <section name="config">
     <options closefiles="1" openmode="0" name="Batchable"/>
     <comment>Free and open source multithreaded batch image processing.</comment>
@@ -8,7 +8,7 @@
   <section name="data">
     <explorer view="C:\ProgramData\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2022-05-05 20:03" user="Poshu" host="MONSTRO"/>
+    <lastopen date="2022-05-06 07:01" user="Poshu" host="MONSTRO"/>
   </section>
   <section name="files">
     <file name="Includes\General.pbi">
@@ -21,7 +21,7 @@
     </file>
     <file name="Includes\Tasks.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="c98b0aebc69c3df839d06387e669ac30"/>
+      <fingerprint md5="ce3a3ac3fc0cc87e6ab1b0eb86e22f5c"/>
     </file>
     <file name="Main.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>

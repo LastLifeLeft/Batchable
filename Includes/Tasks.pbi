@@ -11,7 +11,7 @@
 	Task(#Task_ChannelSwap)\IconID = 0
 	
 	Task(#Task_ChannelDisplacement)\Name = "Channel Displacement"
-	Task(#Task_ChannelDisplacement)\Description = "Displace each color channel individually."
+	Task(#Task_ChannelDisplacement)\Description = "Move around each color channel individually."
 	Task(#Task_ChannelDisplacement)\Type = MainWindow::#TaskType_Colors
 	Task(#Task_ChannelDisplacement)\IconID = 0
 	
@@ -26,7 +26,7 @@
 	Task(#Task_BlackWhite)\IconID = 0
 	
 	Task(#Task_ColorBalancing)\Name = "Color Balancing"
-	Task(#Task_ColorBalancing)\Description = "Change the global adjustment of the intensities of the colors. Et là je prolonge la phrase pour voir comment ça fait avec un wrap..."
+	Task(#Task_ColorBalancing)\Description = "Change the global adjustment of the intensities of the colors."
 	Task(#Task_ColorBalancing)\Type = MainWindow::#TaskType_Colors
 	Task(#Task_ColorBalancing)\IconID = 0
 	
@@ -82,7 +82,7 @@
 
 	
 EndModule
-; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 21
+; IDE Options = PureBasic 6.00 Beta 6 (Windows - x86)
+; CursorPosition = 15
 ; Folding = -
 ; EnableXP
