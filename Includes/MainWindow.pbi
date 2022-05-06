@@ -126,12 +126,16 @@
 	Declare Handler_AddImage()
 	Declare Handler_AddFolder()
 	Declare Handler_RemoveImage()
+	
+	Declare Handler_TaskList()
 	Declare Handler_AddTask()
+	Declare Handler_SetupTask()
+	Declare Handler_RemoveTask()
+	
 	
 	Declare Handler_AddTaskButton()
 	Declare Handler_AddTaskCombo()
 	Declare Handler_AddTaskList()
-	
 	Declare Handler_AddTaskReturn()
 	
 	Declare Handler_Close()
@@ -153,7 +157,7 @@
 		UITK::SetWindowIcon(Window, CatchImage(#PB_Any, ?Icon))
 		BindEvent(#PB_Event_GadgetDrop, @Handler_Drop())
 		
-		ImageList = UITK::VerticalList(#PB_Any, #Window_Margin, #MenuBar_Height + #Window_Margin, #ImageList_Width, #Window_Height - #MenuBar_Height - #Window_Margin * 2, UITK::#VList_Toolbar, @ImageList_ItemRedraw())
+		ImageList = UITK::VerticalList(#PB_Any, #Window_Margin, #MenuBar_Height + #Window_Margin, #ImageList_Width, #Window_Height - #MenuBar_Height - #Window_Margin * 2, UITK::#VList_Toolbar | UITK::#ReOrder, @ImageList_ItemRedraw())
 		SetGadgetAttribute(ImageList, UITK::#Attribute_CornerRadius, 5)
 		SetGadgetAttribute(ImageList, UITK::#Attribute_ItemHeight, 90)
 		EnableGadgetDrop(ImageList, #PB_Drop_Files, #PB_Drag_Move)
@@ -173,10 +177,10 @@
 		UITK::Disable(ButtonRemoveImage, #True)
 		CloseGadgetList()
 		
-		TaskList = UITK::VerticalList(#PB_Any, #Window_Margin * 2 + #ImageList_Width, #MenuBar_Height + #Window_Margin, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2, UITK::#VList_Toolbar, @TaskList_ItemRedraw())
+		TaskList = UITK::VerticalList(#PB_Any, #Window_Margin * 2 + #ImageList_Width, #MenuBar_Height + #Window_Margin, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2, UITK::#VList_Toolbar | UITK::#ReOrder, @TaskList_ItemRedraw())
 		SetGadgetAttribute(TaskList, UITK::#Attribute_ItemHeight, 60)
 		SetGadgetAttribute(TaskList, UITK::#Attribute_CornerRadius, 5)
-		BindGadgetEvent(TaskList, @Handler_AddTaskList(), #PB_EventType_Change)
+		BindGadgetEvent(TaskList, @Handler_TaskList(), #PB_EventType_Change)
 		
 		ButtonAddTask = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "e")
 		SetButtonColor(ButtonAddTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add Task...")
@@ -185,10 +189,12 @@
 		ButtonSetupTask = UITK::Button(#PB_Any, #Iconbar_Offset * 2 + #Iconbar_Size, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "g")
 		SetButtonColor(ButtonSetupTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Task settings...")
 		UITK::Disable(ButtonSetupTask, #True)
+		BindGadgetEvent(ButtonSetupTask, @Handler_SetupTask(), #PB_EventType_Change)
 		
 		ButtonRemoveTask = UITK::Button(#PB_Any, #Iconbar_Offset * 3 + #Iconbar_Size * 2, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "f")
 		SetButtonColor(ButtonRemoveTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $D83C3E, $E06365, $FAFAFB, $FAFAFB, "Remove selected Task")
 		UITK::Disable(ButtonRemoveTask, #True)
+		BindGadgetEvent(ButtonRemoveTask, @Handler_RemoveTask(), #PB_EventType_Change)
 		
 		ButtonProcess = UITK::Button(#PB_Any, #Iconbar_Offset * 4 + #Iconbar_Size * 3, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "h")
 		SetButtonColor(ButtonProcess, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $3AA55D, $6BD08B, $FAFAFB, $FAFAFB, "Start")
@@ -297,6 +303,9 @@
 	Procedure Handler_ImageList()
 		If GetGadgetState(ImageList) = -1
 			UITK::Disable(ButtonRemoveImage, #True)
+			If CountGadgetItems(ImageList) = 0
+				UITK::Disable(ButtonProcess, #True)
+			EndIf
 		Else
 			UITK::Disable(ButtonRemoveImage, #False)
 		EndIf
@@ -351,9 +360,32 @@
 			
 	EndProcedure
 	
+	Procedure Handler_TaskList()
+		If GetGadgetState(TaskList) = -1
+			UITK::Disable(ButtonRemoveTask, #True)
+			UITK::Disable(ButtonSetupTask, #True)
+			If CountGadgetItems(TaskList) = 0
+				UITK::Disable(ButtonProcess, #True)
+			EndIf
+		Else
+			UITK::Disable(ButtonRemoveTask, #False)
+			UITK::Disable(ButtonSetupTask, #False)
+		EndIf
+	EndProcedure
+	
 	Procedure Handler_AddTask()
 		HideGadget(TaskList, #True)
 		HideGadget(AddTaskContainer, #False)
+	EndProcedure
+	
+	Procedure Handler_SetupTask()
+	EndProcedure
+	
+	Procedure Handler_RemoveTask()
+		Protected State = GetGadgetState(TaskList), *Data.OriginalImageInfo = GetGadgetItemData(TaskList, State)
+		
+		RemoveGadgetItem(TaskList, State)
+		
 	EndProcedure
 	
 	Procedure Handler_AddTaskButton()
@@ -363,7 +395,12 @@
 		*Data\Description = *OriginalData\Description
 		*Data\TaskID = *OriginalData\TaskID
 		*Data\ImageID = *OriginalData\ImageID
-  		SetGadgetItemData(TaskList, AddGadgetItem(TaskList, -1, GetGadgetItemText(AddTaskList, GetGadgetState(AddTaskList))), *Data)
+		SetGadgetItemData(TaskList, AddGadgetItem(TaskList, -1, GetGadgetItemText(AddTaskList, GetGadgetState(AddTaskList))), *Data)
+		
+		If CountGadgetItems(ImageList)
+			UITK::Disable(ButtonProcess, #False)
+		EndIf
+		
 		Handler_AddTaskReturn()
 	EndProcedure
 	
@@ -377,14 +414,7 @@
 	EndProcedure
 	
 	Procedure Handler_AddTaskList()
-		Debug GetGadgetState(AddTaskList)
-		If GetGadgetState(AddTaskList) = -1
-			UITK::Disable(AddTaskButton, #True)
-			SetGadgetAttribute(AddTaskButton, #PB_Canvas_Cursor, #PB_Cursor_Default)
-		Else
-			UITK::Disable(AddTaskButton, #False)
-			SetGadgetAttribute(AddTaskButton, #PB_Canvas_Cursor, #PB_Cursor_Hand)
-		EndIf
+		UITK::Disable(AddTaskButton, Bool(GetGadgetState(AddTaskList) = -1))
 	EndProcedure
 	
 	Procedure Handler_Close()
@@ -518,6 +548,10 @@
  			PreviewThread = CreateThread(@Thread_LoadPreview(), #Null)
  		EndIf
  		
+ 		If CountGadgetItems(ImageList) And CountGadgetItems(TaskList)
+			UITK::Disable(ButtonProcess, #False)
+		EndIf
+ 		
  		UnlockMutex(PreviewMutex)
 	EndProcedure
 	
@@ -584,8 +618,7 @@ EndModule
 
 
 
-; IDE Options = PureBasic 6.00 Beta 6 (Windows - x86)
-; CursorPosition = 297
-; FirstLine = 103
-; Folding = tvIAA-
+; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
+; CursorPosition = 150
+; Folding = tBAAA5
 ; EnableXP
