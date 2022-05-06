@@ -75,8 +75,8 @@
 	Task(#Task_SaveGif)\Type = MainWindow::#TaskType_Other
 	Task(#Task_SaveGif)\IconID = ImageID(CatchImage(#PB_Any, ?Gif))
 	
-	Task(#Task_Save)\Name = "Save"
-	Task(#Task_Save)\Description = "Save the results on the disk."
+	Task(#Task_Save)\Name = "Save options"
+	Task(#Task_Save)\Description = "Set up how the results should be written on the disk."
 	Task(#Task_Save)\Type = MainWindow::#TaskType_Other
 	Task(#Task_Save)\IconID = ImageID(CatchImage(#PB_Any, ?Save))
 
@@ -132,7 +132,8 @@
 	
 	EndDataSection
 EndModule
-; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 18
+; IDE Options = PureBasic 6.00 Beta 6 (Windows - x86)
+; CursorPosition = 42
+; FirstLine = 6
 ; Folding = -
 ; EnableXP
