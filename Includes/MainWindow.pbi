@@ -123,11 +123,13 @@
 	
 	Declare Handler_Drop()
 	Declare Handler_ImageList()
+	Declare Handler_ImageList_Keyboard()
 	Declare Handler_AddImage()
 	Declare Handler_AddFolder()
 	Declare Handler_RemoveImage()
 	
 	Declare Handler_TaskList()
+	Declare Handler_TaskList_Keyboard()
 	Declare Handler_AddTask()
 	Declare Handler_SetupTask()
 	Declare Handler_RemoveTask()
@@ -152,7 +154,7 @@
 	Procedure Open()
 		Protected Width
 		
-		Window = UITK::Window(#PB_Any, 0, 0, #Window_Width, #Window_Height, General::#AppName, UITK::#DarkMode | UITK::#Window_CloseButton | #PB_Window_ScreenCentered)
+		Window = UITK::Window(#PB_Any, 0, 0, #Window_Width, #Window_Height, General::#AppName, UITK::#DarkMode | UITK::#Window_CloseButton | #PB_Window_ScreenCentered | #PB_Window_Invisible)
 		BindEvent(#PB_Event_CloseWindow, @Handler_Close(), Window)
 		UITK::SetWindowIcon(Window, CatchImage(#PB_Any, ?Icon))
 		BindEvent(#PB_Event_GadgetDrop, @Handler_Drop())
@@ -162,6 +164,7 @@
 		SetGadgetAttribute(ImageList, UITK::#Attribute_ItemHeight, 90)
 		EnableGadgetDrop(ImageList, #PB_Drop_Files, #PB_Drag_Move)
 		BindGadgetEvent(ImageList, @Handler_ImageList(), #PB_EventType_Change)
+		BindGadgetEvent(ImageList, @Handler_ImageList_Keyboard(), #PB_EventType_KeyDown)
 		
 		ButtonAddImage = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "a")
 		SetButtonColor(ButtonAddImage, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add images...")
@@ -181,6 +184,7 @@
 		SetGadgetAttribute(TaskList, UITK::#Attribute_ItemHeight, 60)
 		SetGadgetAttribute(TaskList, UITK::#Attribute_CornerRadius, 5)
 		BindGadgetEvent(TaskList, @Handler_TaskList(), #PB_EventType_Change)
+		BindGadgetEvent(TaskList, @Handler_TaskList_Keyboard(), #PB_EventType_KeyDown)
 		
 		ButtonAddTask = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "e")
 		SetButtonColor(ButtonAddTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add Task...")
@@ -246,6 +250,8 @@
 		UITK::Disable(AddTaskButton, #True)
 		
 		CloseGadgetList()
+		
+		HideWindow(Window, #False)
 	EndProcedure
 	
 	;{ Private procedures
@@ -311,6 +317,14 @@
 		EndIf
 	EndProcedure
 	
+	Procedure Handler_ImageList_Keyboard()
+		If GetGadgetAttribute(ImageList, #PB_Canvas_Key) = #PB_Shortcut_Delete
+			If GetGadgetState(ImageList) > - 1
+				Handler_RemoveImage()
+			EndIf
+		EndIf
+	EndProcedure
+	
 	Procedure Handler_AddImage()
 		Protected Result.s, File.s
 		          
@@ -370,6 +384,14 @@
 		Else
 			UITK::Disable(ButtonRemoveTask, #False)
 			UITK::Disable(ButtonSetupTask, #False)
+		EndIf
+	EndProcedure
+	
+	Procedure Handler_TaskList_Keyboard()
+		If GetGadgetAttribute(TaskList, #PB_Canvas_Key) = #PB_Shortcut_Delete
+			If GetGadgetState(TaskList) > - 1
+				Handler_RemoveTask()
+			EndIf
 		EndIf
 	EndProcedure
 	
@@ -619,6 +641,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 150
-; Folding = tBAAA5
+; CursorPosition = 390
+; FirstLine = 33
+; Folding = tpAIAg
 ; EnableXP
