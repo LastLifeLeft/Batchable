@@ -227,6 +227,7 @@
 		
 		AddTaskList = UITK::VerticalList(#PB_Any, #Iconbar_Offset, #Iconbar_Offset * 2 + #ButtonBack_Size, Width - #Iconbar_Offset * 2, GadgetHeight(AddTaskContainer) - #Iconbar_Offset * 4 - #ButtonBack_Size * 2, UITK::#Default, @TaskList_ItemRedraw())
 		BindGadgetEvent(AddTaskList, @Handler_AddTaskList(), #PB_EventType_Change)
+		BindGadgetEvent(AddTaskList, @Handler_AddTaskButton(), UITK::#Eventtype_ForcefulChange)
 		SetGadgetAttribute(AddTaskList, UITK::#Attribute_ItemHeight, 60)
 		SetGadgetAttribute(AddTaskList, UITK::#Attribute_SortItems, #True)
 		Populate_TaskList(0)
@@ -641,7 +642,6 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 390
-; FirstLine = 33
-; Folding = tpAIAg
+; CursorPosition = 229
+; Folding = tpAAAg
 ; EnableXP
