@@ -7,7 +7,6 @@
 EndDeclareModule
 
 DeclareModule MainWindow
-	
 	Enumeration ;Task type
 		#TaskType_All
 		#TaskType_Colors
@@ -15,7 +14,10 @@ DeclareModule MainWindow
 		#TaskType_PixelArt
 		#TaskType_Other
 	EndEnumeration
-
+	
+	Global TaskContainerWidth, TaskContainerGadgetWidth
+	Global TaskContainerBackColor, TaskContainerFrontColor
+	
 	Declare Open()
 EndDeclareModule
 
@@ -25,8 +27,8 @@ DeclareModule Tasks
 		#Task_ChannelSwap
 		#Task_ChannelDisplacement
 		#Task_InvertColor
-		#Task_BlackWhite
-		#Task_ColorBalancing
+		#Task_BlackAndWhite
+		#Task_ColorBalance
 		#Task_Posterization
 		#Task_Outline
 		#Task_TrimImage
@@ -42,6 +44,8 @@ DeclareModule Tasks
 	EndEnumeration
 	
 	Prototype Execute(Image, *Settings)
+	Prototype Populate(*Settings)
+	Prototype CleanUp()
 	
 	Structure TaskData
 		Name.s
@@ -49,9 +53,19 @@ DeclareModule Tasks
 		IconID.i
 		Type.i
 		Execute.Execute
+		Populate.Populate
+		CleanUp.CleanUp
+		*DefaultSettings
 	EndStructure
 	
+	#TextWidth = 200
+	#Margin = 30
+	
 	Global Dim Task.TaskData(#__Task_Count - 1)
+EndDeclareModule
+
+DeclareModule Preview
+	Declare Update()
 EndDeclareModule
 
 Module General
@@ -79,6 +93,6 @@ Module General
 	
 EndModule
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 61
-; Folding = O+
+; CursorPosition = 38
+; Folding = e9
 ; EnableXP

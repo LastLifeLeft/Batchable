@@ -4,10 +4,11 @@ IncludePath "Includes"
 IncludeFile "General.pbi"
 IncludeFile "MainWindow.pbi"
 IncludeFile "Tasks.pbi"
+IncludeFile "Preview.pbi"
 
 MainWindow::Open()
 
 Repeat : WaitWindowEvent() : ForEver
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 9
+; CursorPosition = 6
 ; EnableXP

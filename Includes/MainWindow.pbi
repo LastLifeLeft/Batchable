@@ -73,7 +73,8 @@
 		*Data.OriginalImageInfo
 	EndStructure
 	
-	Global Window, ImageList, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, TaskList, ButtonAddTask, ButtonSetupTask, ButtonRemoveTask, ButtonProcess, AddTaskContainer, AddTaskReturnButton, AddTaskCombo, AddTaskList, AddTaskButton
+	Global Window, ImageList, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, TaskList, ButtonAddTask, ButtonSetupTask, ButtonRemoveTask, ButtonProcess, NewTaskContainer, NewTaskReturnButton, NewTaskCombo, NewTaskList, NewTaskButton
+	Global TaskSettingContainer, TaskSettingReturnButton, NewList TaskSettingList()
 	Global BoldFont = FontID(LoadFont(#PB_Any, "Segoe UI", 9, #PB_Font_HighQuality | #PB_Font_Bold))
 	Global ImageLoading, ImageError, ImageLoadingID
 	Global PreviewMutex, PreviewThread, NewList PreviewList.PreviewLoading()
@@ -130,15 +131,16 @@
 	
 	Declare Handler_TaskList()
 	Declare Handler_TaskList_Keyboard()
-	Declare Handler_AddTask()
+	Declare Handler_NewTask()
 	Declare Handler_SetupTask()
 	Declare Handler_RemoveTask()
 	
+	Declare Handler_NewTaskButton()
+	Declare Handler_NewTaskCombo()
+	Declare Handler_NewTaskList()
+	Declare Handler_NewTaskReturn()
 	
-	Declare Handler_AddTaskButton()
-	Declare Handler_AddTaskCombo()
-	Declare Handler_AddTaskList()
-	Declare Handler_AddTaskReturn()
+	Declare Handler_TaskSettingReturn()
 	
 	Declare Handler_Close()
 	
@@ -146,14 +148,14 @@
 	
 	Declare Populate_TaskList(Type)
 	Declare AddImageToQueue(File.s)
-	Declare AddTaskToQueue(Task)
+	Declare NewTaskToQueue(Task)
 	Declare.s BrowseFolder(Folder.s)
+	
+	
 	;}
 	
 	; Public procedures
 	Procedure Open()
-		Protected Width
-		
 		Window = UITK::Window(#PB_Any, 0, 0, #Window_Width, #Window_Height, General::#AppName, UITK::#DarkMode | UITK::#Window_CloseButton | #PB_Window_ScreenCentered | #PB_Window_Invisible)
 		BindEvent(#PB_Event_CloseWindow, @Handler_Close(), Window)
 		UITK::SetWindowIcon(Window, CatchImage(#PB_Any, ?Icon))
@@ -184,11 +186,12 @@
 		SetGadgetAttribute(TaskList, UITK::#Attribute_ItemHeight, 60)
 		SetGadgetAttribute(TaskList, UITK::#Attribute_CornerRadius, 5)
 		BindGadgetEvent(TaskList, @Handler_TaskList(), #PB_EventType_Change)
+		BindGadgetEvent(TaskList, @Handler_SetupTask(), UITK::#Eventtype_ForcefulChange)
 		BindGadgetEvent(TaskList, @Handler_TaskList_Keyboard(), #PB_EventType_KeyDown)
 		
 		ButtonAddTask = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "e")
 		SetButtonColor(ButtonAddTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add Task...")
-		BindGadgetEvent(ButtonAddTask, @Handler_AddTask(), #PB_EventType_Change)
+		BindGadgetEvent(ButtonAddTask, @Handler_NewTask(), #PB_EventType_Change)
 		
 		ButtonSetupTask = UITK::Button(#PB_Any, #Iconbar_Offset * 2 + #Iconbar_Size, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "g")
 		SetButtonColor(ButtonSetupTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Task settings...")
@@ -205,50 +208,66 @@
 		UITK::Disable(ButtonProcess, #True)
 		CloseGadgetList()
 		
-		AddTaskContainer = UITK::Container(#PB_Any, #Window_Margin * 2 + #ImageList_Width, #MenuBar_Height + #Window_Margin, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2)
-		SetGadgetAttribute(AddTaskContainer, UITK::#Attribute_CornerRadius, 5)
-		HideGadget(AddTaskContainer, #True)
+		NewTaskContainer = UITK::Container(#PB_Any, #Window_Margin * 2 + #ImageList_Width, #MenuBar_Height + #Window_Margin, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2)
+		SetGadgetAttribute(NewTaskContainer, UITK::#Attribute_CornerRadius, 5)
+		HideGadget(NewTaskContainer, #True)
 		
+		TaskContainerWidth = GadgetWidth(NewTaskContainer)
+		TaskContainerBackColor = GetGadgetColor(NewTaskContainer, UITK::#Color_Shade_Cold)
+		TaskContainerFrontColor = GetGadgetColor(NewTaskContainer, UITK::#Color_Text_Cold)
+		TaskContainerGadgetWidth = TaskContainerWidth - Tasks::#TextWidth - Tasks::#Margin * 3
 		
-		Width = GadgetWidth(AddTaskContainer)
+		NewTaskCombo = UITK::Combo(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, 200, #ButtonBack_Size, UITK::#Border)
 		
-		AddTaskCombo = UITK::Combo(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, 200, #ButtonBack_Size, UITK::#Border)
+		SetGadgetColor(NewTaskCombo, UITK::#Color_Parent, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
+		SetGadgetColor(NewTaskCombo, UITK::#Color_Back_Warm, SetAlpha(GetGadgetColor(NewTaskCombo, UITK::#Color_Back_Cold), 255))
 		
-		SetGadgetColor(AddTaskCombo, UITK::#Color_Parent, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
-		SetGadgetColor(AddTaskCombo, UITK::#Color_Back_Warm, SetAlpha(GetGadgetColor(AddTaskCombo, UITK::#Color_Back_Cold), 255))
+		AddGadgetItem(NewTaskCombo, #TaskType_All, "All")
+		AddGadgetItem(NewTaskCombo, #TaskType_Colors, "Colors")
+		AddGadgetItem(NewTaskCombo, #TaskType_Transformation, "Transformation")
+		AddGadgetItem(NewTaskCombo, #TaskType_PixelArt, "Pixel Art")
+		AddGadgetItem(NewTaskCombo, #TaskType_Other, "Other")
+		SetGadgetState(NewTaskCombo, 0)
+		BindGadgetEvent(NewTaskCombo, @Handler_NewTaskCombo(), #PB_EventType_Change)
 		
-		AddGadgetItem(AddTaskCombo, #TaskType_All, "All")
-		AddGadgetItem(AddTaskCombo, #TaskType_Colors, "Colors")
-		AddGadgetItem(AddTaskCombo, #TaskType_Transformation, "Transformation")
-		AddGadgetItem(AddTaskCombo, #TaskType_PixelArt, "Pixel Art")
-		AddGadgetItem(AddTaskCombo, #TaskType_Other, "Other")
-		SetGadgetState(AddTaskCombo, 0)
-		BindGadgetEvent(AddTaskCombo, @Handler_AddTaskCombo(), #PB_EventType_Change)
-		
-		AddTaskList = UITK::VerticalList(#PB_Any, #Iconbar_Offset, #Iconbar_Offset * 2 + #ButtonBack_Size, Width - #Iconbar_Offset * 2, GadgetHeight(AddTaskContainer) - #Iconbar_Offset * 4 - #ButtonBack_Size * 2, UITK::#Default, @TaskList_ItemRedraw())
-		BindGadgetEvent(AddTaskList, @Handler_AddTaskList(), #PB_EventType_Change)
-		BindGadgetEvent(AddTaskList, @Handler_AddTaskButton(), UITK::#Eventtype_ForcefulChange)
-		SetGadgetAttribute(AddTaskList, UITK::#Attribute_ItemHeight, 60)
-		SetGadgetAttribute(AddTaskList, UITK::#Attribute_SortItems, #True)
+		NewTaskList = UITK::VerticalList(#PB_Any, #Iconbar_Offset, #Iconbar_Offset * 2 + #ButtonBack_Size, TaskContainerWidth - #Iconbar_Offset * 2, GadgetHeight(NewTaskContainer) - #Iconbar_Offset * 4 - #ButtonBack_Size * 2, UITK::#Default, @TaskList_ItemRedraw())
+		BindGadgetEvent(NewTaskList, @Handler_NewTaskList(), #PB_EventType_Change)
+		BindGadgetEvent(NewTaskList, @Handler_NewTaskButton(), UITK::#Eventtype_ForcefulChange)
+		SetGadgetAttribute(NewTaskList, UITK::#Attribute_ItemHeight, 60)
+		SetGadgetAttribute(NewTaskList, UITK::#Attribute_SortItems, #True)
 		Populate_TaskList(0)
 		
-		AddTaskReturnButton = UITK::Button(#PB_Any, Width - 150 - #Iconbar_Offset, GadgetHeight(AddTaskContainer) - #Iconbar_Offset - #ButtonBack_Size, 150, #ButtonBack_Size, "Cancel", UITK::#Border)
-		BindGadgetEvent(AddTaskReturnButton, @Handler_AddTaskReturn(), #PB_EventType_Change)
-		SetGadgetAttribute(AddTaskReturnButton, #PB_Canvas_Cursor, #PB_Cursor_Hand)
-		SetGadgetColor(AddTaskReturnButton, UITK::#Color_Parent, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
-		SetGadgetColor(AddTaskReturnButton, UITK::#Color_Back_Cold, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
-		SetGadgetColor(AddTaskReturnButton, UITK::#Color_Back_Warm, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Warm), 255))
-		SetGadgetColor(AddTaskReturnButton, UITK::#Color_Back_Hot, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Hot), 255))
+		NewTaskReturnButton = UITK::Button(#PB_Any, TaskContainerWidth - 150 - #Iconbar_Offset, GadgetHeight(NewTaskContainer) - #Iconbar_Offset - #ButtonBack_Size, 150, #ButtonBack_Size, "Cancel", UITK::#Border)
+		BindGadgetEvent(NewTaskReturnButton, @Handler_NewTaskReturn(), #PB_EventType_Change)
+		SetGadgetAttribute(NewTaskReturnButton, #PB_Canvas_Cursor, #PB_Cursor_Hand)
+		SetGadgetColor(NewTaskReturnButton, UITK::#Color_Parent, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
+		SetGadgetColor(NewTaskReturnButton, UITK::#Color_Back_Cold, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
+		SetGadgetColor(NewTaskReturnButton, UITK::#Color_Back_Warm, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Warm), 255))
+		SetGadgetColor(NewTaskReturnButton, UITK::#Color_Back_Hot, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Hot), 255))
 		
-		AddTaskButton = UITK::Button(#PB_Any, Width - 300 - #Iconbar_Offset * 2, GadgetHeight(AddTaskContainer) - #Iconbar_Offset - #ButtonBack_Size, 150, #ButtonBack_Size, "Add to the queue", UITK::#Border)
-		SetGadgetColor(AddTaskButton, UITK::#Color_Parent, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
-		SetGadgetColor(AddTaskButton, UITK::#Color_Back_Cold, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
-		SetGadgetColor(AddTaskButton, UITK::#Color_Back_Disabled, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
-		SetGadgetColor(AddTaskButton, UITK::#Color_Back_Warm, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Warm), 255))
-		SetGadgetColor(AddTaskButton, UITK::#Color_Back_Hot, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Hot), 255))
-		BindGadgetEvent(AddTaskButton, @Handler_AddTaskButton(), #PB_EventType_Change)
+		NewTaskButton = UITK::Button(#PB_Any, TaskContainerWidth - 300 - #Iconbar_Offset * 2, GadgetHeight(NewTaskContainer) - #Iconbar_Offset - #ButtonBack_Size, 150, #ButtonBack_Size, "Add to the queue", UITK::#Border)
+		SetGadgetColor(NewTaskButton, UITK::#Color_Parent, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
+		SetGadgetColor(NewTaskButton, UITK::#Color_Back_Cold, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
+		SetGadgetColor(NewTaskButton, UITK::#Color_Back_Disabled, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
+		SetGadgetColor(NewTaskButton, UITK::#Color_Back_Warm, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Warm), 255))
+		SetGadgetColor(NewTaskButton, UITK::#Color_Back_Hot, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Hot), 255))
+		BindGadgetEvent(NewTaskButton, @Handler_NewTaskButton(), #PB_EventType_Change)
 		
-		UITK::Disable(AddTaskButton, #True)
+		UITK::Disable(NewTaskButton, #True)
+		
+		CloseGadgetList()
+		
+		TaskSettingContainer = UITK::Container(#PB_Any, #Window_Margin * 2 + #ImageList_Width, #MenuBar_Height + #Window_Margin, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2)
+		SetGadgetAttribute(TaskSettingContainer, UITK::#Attribute_CornerRadius, 5)
+		HideGadget(TaskSettingContainer, #True)
+		
+		TaskSettingReturnButton =  UITK::Button(#PB_Any, TaskContainerWidth - 100 - #Iconbar_Offset, GadgetHeight(NewTaskContainer) - #Iconbar_Offset - #ButtonBack_Size, 100, #ButtonBack_Size, "Back", UITK::#Border)
+ 		BindGadgetEvent(TaskSettingReturnButton, @Handler_TaskSettingReturn(), #PB_EventType_Change)
+		SetGadgetAttribute(TaskSettingReturnButton, #PB_Canvas_Cursor, #PB_Cursor_Hand)
+		SetGadgetColor(TaskSettingReturnButton, UITK::#Color_Parent, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
+		SetGadgetColor(TaskSettingReturnButton, UITK::#Color_Back_Cold, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
+		SetGadgetColor(TaskSettingReturnButton, UITK::#Color_Back_Warm, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Warm), 255))
+		SetGadgetColor(TaskSettingReturnButton, UITK::#Color_Back_Hot, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Hot), 255))
 		
 		CloseGadgetList()
 		
@@ -396,48 +415,67 @@
 		EndIf
 	EndProcedure
 	
-	Procedure Handler_AddTask()
+	Procedure Handler_NewTask()
 		HideGadget(TaskList, #True)
-		HideGadget(AddTaskContainer, #False)
+		HideGadget(NewTaskContainer, #False)
 	EndProcedure
 	
 	Procedure Handler_SetupTask()
+		Protected *Data.TaskListInfo = GetGadgetItemData(TaskList, GetGadgetState(TaskList))
+		HideGadget(TaskList, #True)
+		HideGadget(TaskSettingContainer, #False)
+		OpenGadgetList(TaskSettingContainer)
+		
+		Tasks::Task(*Data\TaskID)\Populate(*Data\TaskSettings)
+		
+		CloseGadgetList()
 	EndProcedure
 	
 	Procedure Handler_RemoveTask()
-		Protected State = GetGadgetState(TaskList), *Data.OriginalImageInfo = GetGadgetItemData(TaskList, State)
+		Protected State = GetGadgetState(TaskList), *Data.TaskListInfo = GetGadgetItemData(TaskList, State)
 		
+		FreeMemory(*Data\TaskSettings)
+		FreeStructure(*Data)
 		RemoveGadgetItem(TaskList, State)
-		
 	EndProcedure
 	
-	Procedure Handler_AddTaskButton()
+	Procedure Handler_NewTaskButton()
 		Protected *Data.TaskListInfo = AllocateStructure(TaskListInfo), *OriginalData.AddListInfo
-		*OriginalData = GetGadgetItemData(AddTaskList, GetGadgetState(AddTaskList))
+		*OriginalData = GetGadgetItemData(NewTaskList, GetGadgetState(NewTaskList))
 		
 		*Data\Description = *OriginalData\Description
 		*Data\TaskID = *OriginalData\TaskID
 		*Data\ImageID = *OriginalData\ImageID
-		SetGadgetItemData(TaskList, AddGadgetItem(TaskList, -1, GetGadgetItemText(AddTaskList, GetGadgetState(AddTaskList))), *Data)
+		*Data\TaskSettings = AllocateMemory(MemorySize(Tasks::Task(*Data\TaskID)\DefaultSettings))
+		CopyMemory(Tasks::Task(*Data\TaskID)\DefaultSettings, *Data\TaskSettings, MemorySize(Tasks::Task(*Data\TaskID)\DefaultSettings))
+		SetGadgetItemData(TaskList, AddGadgetItem(TaskList, -1, Tasks::Task(*Data\TaskID)\Name), *Data)
 		
 		If CountGadgetItems(ImageList)
 			UITK::Disable(ButtonProcess, #False)
 		EndIf
 		
-		Handler_AddTaskReturn()
+		Handler_NewTaskReturn()
 	EndProcedure
 	
-	Procedure Handler_AddTaskReturn()
+	Procedure Handler_NewTaskReturn()
 		HideGadget(TaskList, #False)
-		HideGadget(AddTaskContainer, #True)
+		HideGadget(NewTaskContainer, #True)
 	EndProcedure
 	
-	Procedure Handler_AddTaskCombo()
-		Populate_TaskList(GetGadgetState(AddTaskCombo))
+	Procedure Handler_NewTaskCombo()
+		Populate_TaskList(GetGadgetState(NewTaskCombo))
 	EndProcedure
 	
-	Procedure Handler_AddTaskList()
-		UITK::Disable(AddTaskButton, Bool(GetGadgetState(AddTaskList) = -1))
+	Procedure Handler_NewTaskList()
+		UITK::Disable(NewTaskButton, Bool(GetGadgetState(NewTaskList) = -1))
+	EndProcedure
+	
+	Procedure Handler_TaskSettingReturn()
+		Protected *Data.TaskListInfo = GetGadgetItemData(TaskList, GetGadgetState(TaskList))
+		
+		Tasks::Task(*Data\TaskID)\CleanUp()
+		HideGadget(TaskSettingContainer, #True)
+		HideGadget(TaskList, #False)
 	EndProcedure
 	
 	Procedure Handler_Close()
@@ -506,14 +544,14 @@
 	Procedure Populate_TaskList(Type)
 		Protected Loop, Count, *Data.AddListInfo
 		
- 		UITK::Freeze(AddTaskList, #True)
-		Count = CountGadgetItems(AddTaskList) -1
+ 		UITK::Freeze(NewTaskList, #True)
+		Count = CountGadgetItems(NewTaskList) -1
 		For Loop = 0 To Count
-			*Data = GetGadgetItemData(AddTaskList, 0)
+			*Data = GetGadgetItemData(NewTaskList, 0)
 			If *Data
 				FreeStructure(*Data)
 			EndIf
-			RemoveGadgetItem(AddTaskList, 0)
+			RemoveGadgetItem(NewTaskList, 0)
 		Next
 		
 		Count = Tasks::#__Task_Count - 1
@@ -524,11 +562,11 @@
 				*Data\Description = Tasks::Task(Loop)\Description
 				*Data\ImageID = Tasks::Task(Loop)\IconID
 				*Data\TaskID = Loop
-				SetGadgetItemData(AddTaskList, AddGadgetItem(AddTaskList, -1, Tasks::Task(Loop)\Name), *Data)
+				SetGadgetItemData(NewTaskList, AddGadgetItem(NewTaskList, -1, Tasks::Task(Loop)\Name), *Data)
 			EndIf
 		Next
 		
-		UITK::Freeze(AddTaskList, #False)
+		UITK::Freeze(NewTaskList, #False)
 	EndProcedure
 	
 	Procedure AddImageToQueue(FileList.s)
@@ -578,7 +616,7 @@
  		UnlockMutex(PreviewMutex)
 	EndProcedure
 	
-	Procedure AddTaskToQueue(Task)
+	Procedure NewTaskToQueue(Task)
 		
 	EndProcedure
 	
@@ -642,6 +680,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 229
-; Folding = tpAAAg
+; CursorPosition = 438
+; FirstLine = 27
+; Folding = tpAADA-
 ; EnableXP
