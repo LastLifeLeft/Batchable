@@ -60,7 +60,7 @@
 	Structure AlphaThreshold_Settings
 		Threshold.a
 	EndStructure
-		
+	
 	Procedure AlphaThreshold_TrackBarHandler()
 		Protected *Settings.AlphaThreshold_Settings = *CurrentSettings
 		*Settings\Threshold = GetGadgetState(EventGadget())
@@ -74,11 +74,11 @@
 		SetTitleColor(GadgetMap("Threshold Text"))
 		
 		GadgetMap("Threshold Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 0, 255, UITK::#Trackbar_ShowState | General::ColorMode)
+		SetTrackBarColor(GadgetMap("Threshold Trackbar"))
 		BindGadgetEvent(GadgetMap("Threshold Trackbar"), @AlphaThreshold_TrackBarHandler(), #PB_EventType_Change)
 		SetGadgetState(GadgetMap("Threshold Trackbar"), *Settings\Threshold)
 		AddGadgetItem(GadgetMap("Threshold Trackbar"), 0, "")
 		AddGadgetItem(GadgetMap("Threshold Trackbar"), 255, "")
-		SetTrackBarColor(GadgetMap("Threshold Trackbar"))
 	EndProcedure
 	
 	Procedure AlphaThreshold_CleanUp()
@@ -322,11 +322,6 @@
 		Null.a
 	EndStructure
 	
-	Procedure Resize_TrackBarHandler()
-		Protected *Settings.Resize_Settings = *CurrentSettings
-		Preview::Update()
-	EndProcedure
-	
 	Procedure Resize_Populate(*Settings.Resize_Settings)
 		*CurrentSettings = *Settings
 		
@@ -469,21 +464,59 @@
 	
 	;{ Pixel-art upscale
 	Structure PixelArtUpscale_Settings
-		Null.a
+		Scale.a
+		Algorithm.a
 	EndStructure
 	
+	Procedure PixelArtUpscale_TrackBarHandler()
+		Protected *Settings.PixelArtUpscale_Settings = *CurrentSettings
+		*Settings\Scale = GetGadgetState(EventGadget())
+		Preview::Update()
+	EndProcedure
+	
+	Procedure PixelArtUpscale_ComboHandler()
+		Protected *Settings.PixelArtUpscale_Settings = *CurrentSettings
+		*Settings\Algorithm = GetGadgetState(EventGadget())
+		Preview::Update()
+	EndProcedure
+	
 	Procedure PixelArtUpscale_Populate(*Settings.PixelArtUpscale_Settings)
+		Protected Width
 		*CurrentSettings = *Settings
+		Width = Round((MainWindow::TaskContainerGadgetWidth - 3 * #Margin) / 4, #PB_Round_Nearest)
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
+		GadgetMap("Scale Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Scale:")
+		SetTitleColor(GadgetMap("Scale Text"))
+		
+		GadgetMap("Scale Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 2, 5, General::ColorMode)
+		SetTrackBarColor(GadgetMap("Scale Trackbar"))
+		AddGadgetItem(GadgetMap("Scale Trackbar"), 2, "x2")
+		AddGadgetItem(GadgetMap("Scale Trackbar"), 3, "x3")
+		AddGadgetItem(GadgetMap("Scale Trackbar"), 4, "x4")
+		AddGadgetItem(GadgetMap("Scale Trackbar"), 5, "x5")
+		SetGadgetState(GadgetMap("Scale Trackbar"), *Settings\Scale)
+		BindGadgetEvent(GadgetMap("Scale Trackbar"), @PixelArtUpscale_TrackBarHandler(), #PB_EventType_Change)
+		
+		GadgetMap("Algorithm Text") = TextGadget(#PB_Any, #Margin, #Margin + 73, MainWindow::TaskContainerGadgetWidth, 15, "Algorithm:")
+		SetTitleColor(GadgetMap("Algorithm Text"))
+		GadgetMap("Algorithm Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 93, MainWindow::TaskContainerGadgetWidth, 30, General::ColorMode)
+		SetComboColor(GadgetMap("Algorithm Combo"))
+		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "xBR")
+		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "HQx")
+		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "Kopf–Lischinski ")
+		SetGadgetState(GadgetMap("Algorithm Combo"), *Settings\Algorithm)
+		BindGadgetEvent(GadgetMap("Algorithm Combo"), @PixelArtUpscale_ComboHandler(), #PB_EventType_Change)
+		
 	EndProcedure
 	
 	Procedure PixelArtUpscale_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
+		FreeGadget(GadgetMap("Scale Text"))
+		UnbindGadgetEvent(GadgetMap("Scale Trackbar"), @PixelArtUpscale_TrackBarHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Scale Trackbar"))
+		
+		FreeGadget(GadgetMap("Algorithm Text"))
+		UnbindGadgetEvent(GadgetMap("Algorithm Combo"), @PixelArtUpscale_ComboHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Algorithm Combo"))
 		ClearMap(GadgetMap())
 	EndProcedure
 	
@@ -491,6 +524,7 @@
 	Task(#Task_PixelArtUpscale)\Description = "Upscale sprites using various algorithms."
 	Task(#Task_PixelArtUpscale)\Type = MainWindow::#TaskType_PixelArt
 	FillList(PixelArtUpscale)
+	PokeA(Task(#Task_PixelArtUpscale)\DefaultSettings, 2)
 	;}
 	
 	;{ Save as gif
@@ -623,6 +657,6 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 525
-; Folding = BgAAAAAAAFA-
+; CursorPosition = 581
+; Folding = BAAAAAAAgAA+
 ; EnableXP
