@@ -6,7 +6,6 @@
 	Global FontBold = FontID(LoadFont(#PB_Any, "Arial Black", 8, #PB_Font_HighQuality))
 	Global NewMap GadgetMap()
 	
-	
 	;{ Helpers
 	CompilerIf #PB_Compiler_OS = #PB_OS_Windows ; Fix color
 		Macro FixColor(Color)
@@ -101,11 +100,6 @@
 		Null.a
 	EndStructure
 	
-	Procedure ChannelSwap_TrackBarHandler()
-		Protected *Settings.ChannelSwap_Settings = *CurrentSettings
-		Preview::Update()
-	EndProcedure
-	
 	Procedure ChannelSwap_Populate(*Settings.ChannelSwap_Settings)
 		*CurrentSettings = *Settings
 		
@@ -146,11 +140,6 @@
 		Null.a
 	EndStructure
 	
-	Procedure ChannelDisplacement_TrackBarHandler()
-		Protected *Settings.ChannelDisplacement_Settings = *CurrentSettings
-		Preview::Update()
-	EndProcedure
-	
 	Procedure ChannelDisplacement_Populate(*Settings.ChannelDisplacement_Settings)
 		*CurrentSettings = *Settings
 		
@@ -176,11 +165,6 @@
 	Structure Invertcolor_Settings
 		Null.a
 	EndStructure
-	
-	Procedure Invertcolor_TrackBarHandler()
-		Protected *Settings.Invertcolor_Settings = *CurrentSettings
-		Preview::Update()
-	EndProcedure
 	
 	Procedure Invertcolor_Populate(*Settings.Invertcolor_Settings)
 		*CurrentSettings = *Settings
@@ -208,11 +192,6 @@
 		Null.a
 	EndStructure
 	
-	Procedure BlackAndWhite_TrackBarHandler()
-		Protected *Settings.BlackAndWhite_Settings = *CurrentSettings
-		Preview::Update()
-	EndProcedure
-	
 	Procedure BlackAndWhite_Populate(*Settings.BlackAndWhite_Settings)
 		*CurrentSettings = *Settings
 		
@@ -238,11 +217,6 @@
 	Structure ColorBalance_Settings
 		Null.a
 	EndStructure
-	
-	Procedure ColorBalance_TrackBarHandler()
-		Protected *Settings.ColorBalance_Settings = *CurrentSettings
-		Preview::Update()
-	EndProcedure
 	
 	Procedure ColorBalance_Populate(*Settings.ColorBalance_Settings)
 		*CurrentSettings = *Settings
@@ -270,11 +244,6 @@
 		Null.a
 	EndStructure
 	
-	Procedure Posterization_TrackBarHandler()
-		Protected *Settings.Posterization_Settings = *CurrentSettings
-		Preview::Update()
-	EndProcedure
-	
 	Procedure Posterization_Populate(*Settings.Posterization_Settings)
 		*CurrentSettings = *Settings
 		
@@ -301,11 +270,6 @@
 		Null.a
 	EndStructure
 	
-	Procedure Outline_TrackBarHandler()
-		Protected *Settings.Outline_Settings = *CurrentSettings
-		Preview::Update()
-	EndProcedure
-	
 	Procedure Outline_Populate(*Settings.Outline_Settings)
 		*CurrentSettings = *Settings
 		
@@ -331,11 +295,6 @@
 	Structure TrimImage_Settings
 		Null.a
 	EndStructure
-	
-	Procedure TrimImage_TrackBarHandler()
-		Protected *Settings.TrimImage_Settings = *CurrentSettings
-		Preview::Update()
-	EndProcedure
 	
 	Procedure TrimImage_Populate(*Settings.TrimImage_Settings)
 		*CurrentSettings = *Settings
@@ -449,11 +408,6 @@
 		Null.a
 	EndStructure
 	
-	Procedure Watermark_TrackBarHandler()
-		Protected *Settings.Watermark_Settings = *CurrentSettings
-		Preview::Update()
-	EndProcedure
-	
 	Procedure Watermark_Populate(*Settings.Watermark_Settings)
 		*CurrentSettings = *Settings
 		
@@ -518,11 +472,6 @@
 		Null.a
 	EndStructure
 	
-	Procedure PixelArtUpscale_TrackBarHandler()
-		Protected *Settings.PixelArtUpscale_Settings = *CurrentSettings
-		Preview::Update()
-	EndProcedure
-	
 	Procedure PixelArtUpscale_Populate(*Settings.PixelArtUpscale_Settings)
 		*CurrentSettings = *Settings
 		
@@ -549,11 +498,6 @@
 		Null.a
 	EndStructure
 	
-	Procedure SaveGif_TrackBarHandler()
-		Protected *Settings.SaveGif_Settings = *CurrentSettings
-		Preview::Update()
-	EndProcedure
-	
 	Procedure SaveGif_Populate(*Settings.SaveGif_Settings)
 		*CurrentSettings = *Settings
 		
@@ -579,11 +523,6 @@
 	Structure Save_Settings
 		Null.a
 	EndStructure
-	
-	Procedure Save_TrackBarHandler()
-		Protected *Settings.Save_Settings = *CurrentSettings
-		Preview::Update()
-	EndProcedure
 	
 	Procedure Save_Populate(*Settings.Save_Settings)
 		*CurrentSettings = *Settings
@@ -684,6 +623,6 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 8
-; Folding = BgAAAAAAAAAAA-
+; CursorPosition = 525
+; Folding = BgAAAAAAAFA-
 ; EnableXP
