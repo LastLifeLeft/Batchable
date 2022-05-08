@@ -43,6 +43,12 @@
 		SetGadgetColor(Combo, UITK::#Color_Back_Warm, SetAlpha(UITK::WindowGetColor(MainWindow::Window, UITK::#Color_Back_Cold), 255))
 	EndProcedure
 	
+	Procedure SetTrackBarColor(TrackBar)
+		SetGadgetColor(TrackBar, UITK::#Color_Parent, SetAlpha(MainWindow::TaskContainerBackColor, 255))
+		SetGadgetColor(TrackBar, UITK::#Color_Shade_Warm, SetAlpha(GetGadgetColor(TrackBar, UITK::#Color_Line_Cold), 255))
+		SetGadgetColor(TrackBar, UITK::#Color_Line_Cold, SetAlpha(MainWindow::TaskContainerFrontColor, 200))
+	EndProcedure
+	
 	Macro FillList(TaskName)
 		Task(#Task_#TaskName)\IconID = ImageID(CatchImage(#PB_Any, ?TaskName))
 		Task(#Task_#TaskName)\Populate = @TaskName#_Populate()
@@ -70,13 +76,10 @@
 		
 		GadgetMap("Threshold Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 0, 255, UITK::#Trackbar_ShowState | General::ColorMode)
 		BindGadgetEvent(GadgetMap("Threshold Trackbar"), @AlphaThreshold_TrackBarHandler(), #PB_EventType_Change)
-		
 		SetGadgetState(GadgetMap("Threshold Trackbar"), *Settings\Threshold)
 		AddGadgetItem(GadgetMap("Threshold Trackbar"), 0, "")
 		AddGadgetItem(GadgetMap("Threshold Trackbar"), 255, "")
-		SetGadgetColor(GadgetMap("Threshold Trackbar"), UITK::#Color_Parent, SetAlpha(MainWindow::TaskContainerBackColor, 255))
-		SetGadgetColor(GadgetMap("Threshold Trackbar"), UITK::#Color_Shade_Warm, SetAlpha(GetGadgetColor(GadgetMap("Threshold Trackbar"), UITK::#Color_Line_Cold), 255))
-		SetGadgetColor(GadgetMap("Threshold Trackbar"), UITK::#Color_Line_Cold, SetAlpha(MainWindow::TaskContainerFrontColor, 200))
+		SetTrackBarColor(GadgetMap("Threshold Trackbar"))
 	EndProcedure
 	
 	Procedure AlphaThreshold_CleanUp()
@@ -389,6 +392,7 @@
 		GadgetMap("Padding Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 135, MainWindow::TaskContainerGadgetWidth, 30, General::ColorMode)
 		SetComboColor(GadgetMap("Padding Combo"))
 		AddGadgetItem(GadgetMap("Padding Combo"), -1, "Scale Inner (LetterBoxing)")
+		AddGadgetItem(GadgetMap("Padding Combo"), -1, "Scale Inner (Crop)")
 		AddGadgetItem(GadgetMap("Padding Combo"), -1, "Scale Outer")
 		AddGadgetItem(GadgetMap("Padding Combo"), -1, "Stretch")
 		SetGadgetState(GadgetMap("Padding Combo"), 0)
@@ -397,7 +401,9 @@
 	Procedure Resize_CleanUp()
 		FreeGadget(GadgetMap("Title Text"))
 		FreeGadget(GadgetMap("Algorithm Text"))
+		FreeGadget(GadgetMap("Algorithm Combo"))
 		FreeGadget(GadgetMap("Padding Text"))
+		FreeGadget(GadgetMap("Padding Combo"))
 		ClearMap(GadgetMap())
 	EndProcedure
 	
@@ -471,26 +477,32 @@
 	
 	;{ RotSprite
 	Structure RotSprite_Settings
-		Null.a
+		Angle.w
 	EndStructure
 	
 	Procedure RotSprite_TrackBarHandler()
 		Protected *Settings.RotSprite_Settings = *CurrentSettings
+		*Settings\Angle = GetGadgetState(EventGadget())
 		Preview::Update()
 	EndProcedure
 	
 	Procedure RotSprite_Populate(*Settings.RotSprite_Settings)
 		*CurrentSettings = *Settings
+		GadgetMap("Angle Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Rotation angle:")
+		SetTitleColor(GadgetMap("Angle Text"))
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
+		GadgetMap("Angle Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 0, 360, UITK::#Trackbar_ShowState | General::ColorMode)
+		BindGadgetEvent(GadgetMap("Angle Trackbar"), @RotSprite_TrackBarHandler(), #PB_EventType_Change)
+		
+		SetGadgetState(GadgetMap("Angle Trackbar"), *Settings\Angle)
+		AddGadgetItem(GadgetMap("Angle Trackbar"), 0, "")
+		AddGadgetItem(GadgetMap("Angle Trackbar"), 360, "")
+		SetTrackBarColor(GadgetMap("Angle Trackbar"))
 	EndProcedure
 	
 	Procedure RotSprite_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
+		FreeGadget(GadgetMap("Angle Text"))
+		FreeGadget(GadgetMap("Angle Trackbar"))
 		ClearMap(GadgetMap())
 	EndProcedure
 	
@@ -498,6 +510,7 @@
 	Task(#Task_Rotsprite)\Description = "Rotates images using the Rotsprite algorithm by Xenowhirl."
 	Task(#Task_Rotsprite)\Type = MainWindow::#TaskType_PixelArt
 	FillList(RotSprite)
+	PokeW(Task(#Task_Rotsprite)\DefaultSettings, 0)
 	;}
 	
 	;{ Pixel-art upscale
@@ -671,7 +684,6 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 386
-; FirstLine = 19
-; Folding = DQAAAAAANAAAg
+; CursorPosition = 8
+; Folding = BgAAAAAAAAAAA-
 ; EnableXP

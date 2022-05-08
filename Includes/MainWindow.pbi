@@ -151,7 +151,6 @@
 	Declare NewTaskToQueue(Task)
 	Declare.s BrowseFolder(Folder.s)
 	
-	
 	;}
 	
 	; Public procedures
@@ -680,6 +679,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 75
-; Folding = t0AAAA-
+; CursorPosition = 152
+; FirstLine = 3
+; Folding = tpAAAA-
 ; EnableXP
