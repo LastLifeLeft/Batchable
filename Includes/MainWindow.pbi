@@ -73,7 +73,7 @@
 		*Data.OriginalImageInfo
 	EndStructure
 	
-	Global Window, ImageList, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, TaskList, ButtonAddTask, ButtonSetupTask, ButtonRemoveTask, ButtonProcess, NewTaskContainer, NewTaskReturnButton, NewTaskCombo, NewTaskList, NewTaskButton
+	Global ImageList, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, TaskList, ButtonAddTask, ButtonSetupTask, ButtonRemoveTask, ButtonProcess, NewTaskContainer, NewTaskReturnButton, NewTaskCombo, NewTaskList, NewTaskButton
 	Global TaskSettingContainer, TaskSettingReturnButton, NewList TaskSettingList()
 	Global BoldFont = FontID(LoadFont(#PB_Any, "Segoe UI", 9, #PB_Font_HighQuality | #PB_Font_Bold))
 	Global ImageLoading, ImageError, ImageLoadingID
@@ -156,7 +156,7 @@
 	
 	; Public procedures
 	Procedure Open()
-		Window = UITK::Window(#PB_Any, 0, 0, #Window_Width, #Window_Height, General::#AppName, UITK::#DarkMode | UITK::#Window_CloseButton | #PB_Window_ScreenCentered | #PB_Window_Invisible)
+		Window = UITK::Window(#PB_Any, 0, 0, #Window_Width, #Window_Height, General::#AppName, General::ColorMode | UITK::#Window_CloseButton | #PB_Window_ScreenCentered | #PB_Window_Invisible)
 		BindEvent(#PB_Event_CloseWindow, @Handler_Close(), Window)
 		UITK::SetWindowIcon(Window, CatchImage(#PB_Any, ?Icon))
 		BindEvent(#PB_Event_GadgetDrop, @Handler_Drop())
@@ -215,7 +215,7 @@
 		TaskContainerWidth = GadgetWidth(NewTaskContainer)
 		TaskContainerBackColor = GetGadgetColor(NewTaskContainer, UITK::#Color_Shade_Cold)
 		TaskContainerFrontColor = GetGadgetColor(NewTaskContainer, UITK::#Color_Text_Cold)
-		TaskContainerGadgetWidth = TaskContainerWidth - Tasks::#TextWidth - Tasks::#Margin * 3
+		TaskContainerGadgetWidth = TaskContainerWidth - Tasks::#Margin * 2
 		
 		NewTaskCombo = UITK::Combo(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, 200, #ButtonBack_Size, UITK::#Border)
 		
@@ -230,7 +230,7 @@
 		SetGadgetState(NewTaskCombo, 0)
 		BindGadgetEvent(NewTaskCombo, @Handler_NewTaskCombo(), #PB_EventType_Change)
 		
-		NewTaskList = UITK::VerticalList(#PB_Any, #Iconbar_Offset, #Iconbar_Offset * 2 + #ButtonBack_Size, TaskContainerWidth - #Iconbar_Offset * 2, GadgetHeight(NewTaskContainer) - #Iconbar_Offset * 4 - #ButtonBack_Size * 2, UITK::#Default, @TaskList_ItemRedraw())
+		NewTaskList = UITK::VerticalList(#PB_Any, 0, #Iconbar_Offset * 2 + #ButtonBack_Size, TaskContainerWidth, GadgetHeight(NewTaskContainer) - #Iconbar_Offset * 4 - #ButtonBack_Size * 2, UITK::#Default, @TaskList_ItemRedraw())
 		BindGadgetEvent(NewTaskList, @Handler_NewTaskList(), #PB_EventType_Change)
 		BindGadgetEvent(NewTaskList, @Handler_NewTaskButton(), UITK::#Eventtype_ForcefulChange)
 		SetGadgetAttribute(NewTaskList, UITK::#Attribute_ItemHeight, 60)
@@ -680,7 +680,6 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 438
-; FirstLine = 27
-; Folding = tpAADA-
+; CursorPosition = 75
+; Folding = t0AAAA-
 ; EnableXP

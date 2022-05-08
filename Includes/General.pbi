@@ -1,6 +1,8 @@
 ﻿DeclareModule General
 	#AppName = "Batchable"
 	
+	Global ColorMode = UITK::#DarkMode
+	
 	; Public procedure declarations
 	Declare Min(A, B)
 	Declare Max(A, B)
@@ -14,6 +16,8 @@ DeclareModule MainWindow
 		#TaskType_PixelArt
 		#TaskType_Other
 	EndEnumeration
+	
+	Global Window
 	
 	Global TaskContainerWidth, TaskContainerGadgetWidth
 	Global TaskContainerBackColor, TaskContainerFrontColor
@@ -58,7 +62,6 @@ DeclareModule Tasks
 		*DefaultSettings
 	EndStructure
 	
-	#TextWidth = 200
 	#Margin = 30
 	
 	Global Dim Task.TaskData(#__Task_Count - 1)
@@ -93,6 +96,6 @@ Module General
 	
 EndModule
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 38
-; Folding = e9
+; CursorPosition = 19
+; Folding = f9
 ; EnableXP

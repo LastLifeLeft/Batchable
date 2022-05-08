@@ -6,6 +6,7 @@
 	Global FontBold = FontID(LoadFont(#PB_Any, "Arial Black", 8, #PB_Font_HighQuality))
 	Global NewMap GadgetMap()
 	
+	
 	;{ Helpers
 	CompilerIf #PB_Compiler_OS = #PB_OS_Windows ; Fix color
 		Macro FixColor(Color)
@@ -37,6 +38,11 @@
 		SetGadgetFont(Gadget, FontBold)
 	EndProcedure
 	
+	Procedure SetComboColor(Combo)
+		SetGadgetColor(Combo, UITK::#Color_Parent, SetAlpha(UITK::WindowGetColor(MainWindow::Window, UITK::#Color_Shade_Cold), 255))
+		SetGadgetColor(Combo, UITK::#Color_Back_Warm, SetAlpha(UITK::WindowGetColor(MainWindow::Window, UITK::#Color_Back_Cold), 255))
+	EndProcedure
+	
 	Macro FillList(TaskName)
 		Task(#Task_#TaskName)\IconID = ImageID(CatchImage(#PB_Any, ?TaskName))
 		Task(#Task_#TaskName)\Populate = @TaskName#_Populate()
@@ -59,10 +65,10 @@
 	Procedure AlphaThreshold_Populate(*Settings.AlphaThreshold_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Threshold Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "Threshold value:")
+		GadgetMap("Threshold Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Threshold value:")
 		SetTitleColor(GadgetMap("Threshold Text"))
 		
-		GadgetMap("Threshold Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 40, 0, 255, UITK::#Trackbar_ShowState | UITK::#DarkMode)
+		GadgetMap("Threshold Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 0, 255, UITK::#Trackbar_ShowState | General::ColorMode)
 		BindGadgetEvent(GadgetMap("Threshold Trackbar"), @AlphaThreshold_TrackBarHandler(), #PB_EventType_Change)
 		
 		SetGadgetState(GadgetMap("Threshold Trackbar"), *Settings\Threshold)
@@ -100,15 +106,29 @@
 	Procedure ChannelSwap_Populate(*Settings.ChannelSwap_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
+		GadgetMap("Red Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the red Channel")
+		SetTitleColor(GadgetMap("Red Text"))
+		
+		
+		GadgetMap("Green Text") = TextGadget(#PB_Any, #Margin, #Margin + 60, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the green Green")
+		SetTitleColor(GadgetMap("Green Text"))
+		
+		
+		GadgetMap("Blue Text") = TextGadget(#PB_Any, #Margin, #Margin + 120, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the blue Channel")
+		SetTitleColor(GadgetMap("Blue Text"))
+		
+		
+		GadgetMap("Alpha Text") = TextGadget(#PB_Any, #Margin, #Margin + 180, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the alpha Channel")
+		SetTitleColor(GadgetMap("Alpha Text"))
+		
+		
 	EndProcedure
 	
 	Procedure ChannelSwap_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
+		FreeGadget(GadgetMap("Red Text"))
+		FreeGadget(GadgetMap("Green Text"))
+		FreeGadget(GadgetMap("Blue Text"))
+		FreeGadget(GadgetMap("Alpha Text"))
 		ClearMap(GadgetMap())
 	EndProcedure
 	
@@ -131,9 +151,9 @@
 	Procedure ChannelDisplacement_Populate(*Settings.ChannelDisplacement_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
 		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
+		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 45, "This task output is always the same and doesn't support any setting.")
 		SetTextColor(GadgetMap("Description Text"))
 	EndProcedure
 	
@@ -162,7 +182,7 @@
 	Procedure Invertcolor_Populate(*Settings.Invertcolor_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
 		SetTitleColor(GadgetMap("Title Text"))
 		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
 		SetTextColor(GadgetMap("Description Text"))
@@ -193,7 +213,7 @@
 	Procedure BlackAndWhite_Populate(*Settings.BlackAndWhite_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
 		SetTitleColor(GadgetMap("Title Text"))
 		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
 		SetTextColor(GadgetMap("Description Text"))
@@ -224,7 +244,7 @@
 	Procedure ColorBalance_Populate(*Settings.ColorBalance_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
 		SetTitleColor(GadgetMap("Title Text"))
 		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
 		SetTextColor(GadgetMap("Description Text"))
@@ -255,7 +275,7 @@
 	Procedure Posterization_Populate(*Settings.Posterization_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
 		SetTitleColor(GadgetMap("Title Text"))
 		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
 		SetTextColor(GadgetMap("Description Text"))
@@ -286,7 +306,7 @@
 	Procedure Outline_Populate(*Settings.Outline_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
 		SetTitleColor(GadgetMap("Title Text"))
 		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
 		SetTextColor(GadgetMap("Description Text"))
@@ -317,7 +337,7 @@
 	Procedure TrimImage_Populate(*Settings.TrimImage_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
 		SetTitleColor(GadgetMap("Title Text"))
 		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
 		SetTextColor(GadgetMap("Description Text"))
@@ -348,15 +368,36 @@
 	Procedure Resize_Populate(*Settings.Resize_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Target Size")
 		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
+		
+		GadgetMap("Algorithm Text") = TextGadget(#PB_Any, #Margin, #Margin + 50, MainWindow::TaskContainerGadgetWidth, 15, "Algorithm used")
+		SetTitleColor(GadgetMap("Algorithm Text"))
+		
+		GadgetMap("Algorithm Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 70, MainWindow::TaskContainerGadgetWidth, 30, General::ColorMode)
+		SetComboColor(GadgetMap("Algorithm Combo"))
+		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "Automatic (chosen for each image)")
+		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "Nearest Neighbor")
+		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "Super Sampling")
+		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "Bicubic")
+		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "Bilinear")
+		SetGadgetState(GadgetMap("Algorithm Combo"), 0)
+		
+		GadgetMap("Padding Text") = TextGadget(#PB_Any, #Margin, #Margin + 115, MainWindow::TaskContainerGadgetWidth, 15, "Aspect ratio handling")
+		SetTitleColor(GadgetMap("Padding Text"))
+		
+		GadgetMap("Padding Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 135, MainWindow::TaskContainerGadgetWidth, 30, General::ColorMode)
+		SetComboColor(GadgetMap("Padding Combo"))
+		AddGadgetItem(GadgetMap("Padding Combo"), -1, "Scale Inner (LetterBoxing)")
+		AddGadgetItem(GadgetMap("Padding Combo"), -1, "Scale Outer")
+		AddGadgetItem(GadgetMap("Padding Combo"), -1, "Stretch")
+		SetGadgetState(GadgetMap("Padding Combo"), 0)
 	EndProcedure
 	
 	Procedure Resize_CleanUp()
 		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
+		FreeGadget(GadgetMap("Algorithm Text"))
+		FreeGadget(GadgetMap("Padding Text"))
 		ClearMap(GadgetMap())
 	EndProcedure
 	
@@ -379,7 +420,7 @@
 	Procedure Blur_Populate(*Settings.Blur_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
 		SetTitleColor(GadgetMap("Title Text"))
 		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
 		SetTextColor(GadgetMap("Description Text"))
@@ -410,7 +451,7 @@
 	Procedure Watermark_Populate(*Settings.Watermark_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
 		SetTitleColor(GadgetMap("Title Text"))
 		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
 		SetTextColor(GadgetMap("Description Text"))
@@ -441,7 +482,7 @@
 	Procedure RotSprite_Populate(*Settings.RotSprite_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
 		SetTitleColor(GadgetMap("Title Text"))
 		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
 		SetTextColor(GadgetMap("Description Text"))
@@ -472,7 +513,7 @@
 	Procedure PixelArtUpscale_Populate(*Settings.PixelArtUpscale_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
 		SetTitleColor(GadgetMap("Title Text"))
 		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
 		SetTextColor(GadgetMap("Description Text"))
@@ -503,7 +544,7 @@
 	Procedure SaveGif_Populate(*Settings.SaveGif_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
 		SetTitleColor(GadgetMap("Title Text"))
 		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
 		SetTextColor(GadgetMap("Description Text"))
@@ -534,7 +575,7 @@
 	Procedure Save_Populate(*Settings.Save_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, #TextWidth, 15, "No settings")
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
 		SetTitleColor(GadgetMap("Title Text"))
 		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
 		SetTextColor(GadgetMap("Description Text"))
@@ -552,7 +593,7 @@
 	FillList(Save)
 	;}
 	
-	DataSection
+	DataSection ;{
 		BlackAndWhite:
 		IncludeBinary "..\Media\Tinified\Black & White.png"
 		
@@ -602,10 +643,35 @@
 		IncludeBinary "..\Media\Tinified\Watermark.png"
 		
 	
-	EndDataSection
+	EndDataSection ;}
 EndModule
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 558
-; FirstLine = 42
-; Folding = ZDAcHc4d4d-d5
+; CursorPosition = 386
+; FirstLine = 19
+; Folding = DQAAAAAANAAAg
 ; EnableXP
