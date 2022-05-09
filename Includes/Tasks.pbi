@@ -95,7 +95,10 @@
 	
 	;{ Channel Swap
 	Structure ChannelSwap_Settings
-		Null.a
+		Red.a
+		Green.a
+		Blue.a
+		Alpha.a
 	EndStructure
 	
 	Global ChannelSwap_Icon_Red, ChannelSwap_Icon_Green, ChannelSwap_Icon_Blue, ChannelSwap_Icon_Alpha
@@ -104,6 +107,30 @@
 	ChannelSwap_Icon_Green = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Green))
 	ChannelSwap_Icon_Blue = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Blue))
 	ChannelSwap_Icon_Alpha = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Alpha))
+	
+	Procedure ChannelSwap_RedComboHandler()
+		Protected *Settings.ChannelSwap_Settings = *CurrentSettings
+		*Settings\Red = GetGadgetState(EventGadget())
+		Preview::Update()
+	EndProcedure
+	
+	Procedure ChannelSwap_GreenComboHandler()
+		Protected *Settings.ChannelSwap_Settings = *CurrentSettings
+		*Settings\Green = GetGadgetState(EventGadget())
+		Preview::Update()
+	EndProcedure
+	
+	Procedure ChannelSwap_BlueComboHandler()
+		Protected *Settings.ChannelSwap_Settings = *CurrentSettings
+		*Settings\Blue = GetGadgetState(EventGadget())
+		Preview::Update()
+	EndProcedure
+	
+	Procedure ChannelSwap_AlphaComboHandler()
+		Protected *Settings.ChannelSwap_Settings = *CurrentSettings
+		*Settings\Alpha = GetGadgetState(EventGadget())
+		Preview::Update()
+	EndProcedure
 	
 	Procedure ChannelSwap_Populate(*Settings.ChannelSwap_Settings)
 		*CurrentSettings = *Settings
@@ -116,7 +143,8 @@
 		AddGadgetItem(GadgetMap("Red Combo"), -1, "Green", ChannelSwap_Icon_Green)
 		AddGadgetItem(GadgetMap("Red Combo"), -1, "Blue", ChannelSwap_Icon_Blue)
 		AddGadgetItem(GadgetMap("Red Combo"), -1, "Alpha", ChannelSwap_Icon_Alpha)
-		SetGadgetState(GadgetMap("Red Combo"), 0)
+		BindGadgetEvent(GadgetMap("Red Combo"), @ChannelSwap_RedComboHandler(), #PB_EventType_Change)
+		SetGadgetState(GadgetMap("Red Combo"), *Settings\Red)
 		
 		GadgetMap("Green Text") = TextGadget(#PB_Any, #Margin, #Margin + 65, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the green Green")
 		SetTitleColor(GadgetMap("Green Text"))
@@ -126,7 +154,8 @@
 		AddGadgetItem(GadgetMap("Green Combo"), -1, "Green", ChannelSwap_Icon_Green)
 		AddGadgetItem(GadgetMap("Green Combo"), -1, "Blue", ChannelSwap_Icon_Blue)
 		AddGadgetItem(GadgetMap("Green Combo"), -1, "Alpha", ChannelSwap_Icon_Alpha)
-		SetGadgetState(GadgetMap("Green Combo"), 1)
+		BindGadgetEvent(GadgetMap("Green Combo"), @ChannelSwap_GreenComboHandler(), #PB_EventType_Change)
+		SetGadgetState(GadgetMap("Green Combo"), *Settings\Green)
 		
 		GadgetMap("Blue Text") = TextGadget(#PB_Any, #Margin, #Margin + 130, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the blue Channel")
 		SetTitleColor(GadgetMap("Blue Text"))
@@ -136,7 +165,8 @@
 		AddGadgetItem(GadgetMap("Blue Combo"), -1, "Green", ChannelSwap_Icon_Green)
 		AddGadgetItem(GadgetMap("Blue Combo"), -1, "Blue", ChannelSwap_Icon_Blue)
 		AddGadgetItem(GadgetMap("Blue Combo"), -1, "Alpha", ChannelSwap_Icon_Alpha)
-		SetGadgetState(GadgetMap("Blue Combo"), 2)
+		BindGadgetEvent(GadgetMap("Blue Combo"), @ChannelSwap_BlueComboHandler(), #PB_EventType_Change)
+		SetGadgetState(GadgetMap("Blue Combo"), *Settings\Blue)
 		
 		GadgetMap("Alpha Text") = TextGadget(#PB_Any, #Margin, #Margin + 195, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the alpha Channel")
 		SetTitleColor(GadgetMap("Alpha Text"))
@@ -146,17 +176,28 @@
 		AddGadgetItem(GadgetMap("Alpha Combo"), -1, "Green", ChannelSwap_Icon_Green)
 		AddGadgetItem(GadgetMap("Alpha Combo"), -1, "Blue", ChannelSwap_Icon_Blue)
 		AddGadgetItem(GadgetMap("Alpha Combo"), -1, "Alpha", ChannelSwap_Icon_Alpha)
-		SetGadgetState(GadgetMap("Alpha Combo"), 3)
+		BindGadgetEvent(GadgetMap("Alpha Combo"), @ChannelSwap_AlphaComboHandler(), #PB_EventType_Change)
+		SetGadgetState(GadgetMap("Alpha Combo"), *Settings\Alpha)
 		
 	EndProcedure
 	
 	Procedure ChannelSwap_CleanUp()
 		FreeGadget(GadgetMap("Red Text"))
+		BindGadgetEvent(GadgetMap("Red Combo"), @ChannelSwap_RedComboHandler(), #PB_EventType_Change)
 		FreeGadget(GadgetMap("Red Combo"))
 		
 		FreeGadget(GadgetMap("Green Text"))
+		BindGadgetEvent(GadgetMap("Green Combo"), @ChannelSwap_GreenComboHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Green Combo"))
+		
 		FreeGadget(GadgetMap("Blue Text"))
+		BindGadgetEvent(GadgetMap("Blue Combo"), @ChannelSwap_BlueComboHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Blue Combo"))
+		
 		FreeGadget(GadgetMap("Alpha Text"))
+		BindGadgetEvent(GadgetMap("Alpha Combo"), @ChannelSwap_AlphaComboHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Alpha Combo"))
+		
 		ClearMap(GadgetMap())
 	EndProcedure
 	
@@ -164,6 +205,10 @@
 	Task(#Task_ChannelSwap)\Description = "Change each color channels assignation."
 	Task(#Task_ChannelSwap)\Type = MainWindow::#TaskType_Colors
 	FillList(ChannelSwap)
+	PokeA(Task(#Task_ChannelSwap)\DefaultSettings, 0)
+	PokeA(Task(#Task_ChannelSwap)\DefaultSettings + OffsetOf(ChannelSwap_Settings\Green), 1)
+	PokeA(Task(#Task_ChannelSwap)\DefaultSettings + OffsetOf(ChannelSwap_Settings\Blue), 2)
+	PokeA(Task(#Task_ChannelSwap)\DefaultSettings + OffsetOf(ChannelSwap_Settings\Alpha), 3)
 	;}
 	
 	;{ Channel Displacement
@@ -746,7 +791,6 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 7 (Windows - x64)
-; CursorPosition = 149
-; FirstLine = 26
-; Folding = DQgDAAAAAAA5
+; CursorPosition = 2
+; Folding = BAAgAAAAAAAA9
 ; EnableXP
