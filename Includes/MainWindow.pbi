@@ -157,7 +157,7 @@
 	Procedure Open()
 		Window = UITK::Window(#PB_Any, 0, 0, #Window_Width, #Window_Height, General::#AppName, General::ColorMode | UITK::#Window_CloseButton | #PB_Window_ScreenCentered | #PB_Window_Invisible)
 		BindEvent(#PB_Event_CloseWindow, @Handler_Close(), Window)
-		UITK::SetWindowIcon(Window, CatchImage(#PB_Any, ?Icon))
+		UITK::SetWindowIcon(Window, ImageID(CatchImage(#PB_Any, ?Icon)))
 		BindEvent(#PB_Event_GadgetDrop, @Handler_Drop())
 		
 		ImageList = UITK::VerticalList(#PB_Any, #Window_Margin, #MenuBar_Height + #Window_Margin, #ImageList_Width, #Window_Height - #MenuBar_Height - #Window_Margin * 2, UITK::#VList_Toolbar | UITK::#ReOrder, @ImageList_ItemRedraw())
@@ -676,8 +676,8 @@ EndModule
 
 
 
-; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 295
-; FirstLine = 42
-; Folding = tpBAAA-
+; IDE Options = PureBasic 6.00 Beta 7 (Windows - x64)
+; CursorPosition = 159
+; FirstLine = 24
+; Folding = t6AAAA-
 ; EnableXP

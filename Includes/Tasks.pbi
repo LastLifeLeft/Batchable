@@ -98,29 +98,62 @@
 		Null.a
 	EndStructure
 	
+	Global ChannelSwap_Icon_Red, ChannelSwap_Icon_Green, ChannelSwap_Icon_Blue, ChannelSwap_Icon_Alpha
+	
+	ChannelSwap_Icon_Red = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Red))
+	ChannelSwap_Icon_Green = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Green))
+	ChannelSwap_Icon_Blue = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Blue))
+	ChannelSwap_Icon_Alpha = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Alpha))
+	
 	Procedure ChannelSwap_Populate(*Settings.ChannelSwap_Settings)
 		*CurrentSettings = *Settings
 		
 		GadgetMap("Red Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the red Channel")
 		SetTitleColor(GadgetMap("Red Text"))
+		GadgetMap("Red Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 30)
+		SetComboColor(GadgetMap("Red Combo"))
+		AddGadgetItem(GadgetMap("Red Combo"), -1, "Red", ChannelSwap_Icon_Red)
+		AddGadgetItem(GadgetMap("Red Combo"), -1, "Green", ChannelSwap_Icon_Green)
+		AddGadgetItem(GadgetMap("Red Combo"), -1, "Blue", ChannelSwap_Icon_Blue)
+		AddGadgetItem(GadgetMap("Red Combo"), -1, "Alpha", ChannelSwap_Icon_Alpha)
+		SetGadgetState(GadgetMap("Red Combo"), 0)
 		
-		
-		GadgetMap("Green Text") = TextGadget(#PB_Any, #Margin, #Margin + 60, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the green Green")
+		GadgetMap("Green Text") = TextGadget(#PB_Any, #Margin, #Margin + 65, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the green Green")
 		SetTitleColor(GadgetMap("Green Text"))
+		GadgetMap("Green Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 85, MainWindow::TaskContainerGadgetWidth, 30)
+		SetComboColor(GadgetMap("Green Combo"))
+		AddGadgetItem(GadgetMap("Green Combo"), -1, "Red", ChannelSwap_Icon_Red)
+		AddGadgetItem(GadgetMap("Green Combo"), -1, "Green", ChannelSwap_Icon_Green)
+		AddGadgetItem(GadgetMap("Green Combo"), -1, "Blue", ChannelSwap_Icon_Blue)
+		AddGadgetItem(GadgetMap("Green Combo"), -1, "Alpha", ChannelSwap_Icon_Alpha)
+		SetGadgetState(GadgetMap("Green Combo"), 1)
 		
-		
-		GadgetMap("Blue Text") = TextGadget(#PB_Any, #Margin, #Margin + 120, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the blue Channel")
+		GadgetMap("Blue Text") = TextGadget(#PB_Any, #Margin, #Margin + 130, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the blue Channel")
 		SetTitleColor(GadgetMap("Blue Text"))
+		GadgetMap("Blue Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 150, MainWindow::TaskContainerGadgetWidth, 30)
+		SetComboColor(GadgetMap("Blue Combo"))
+		AddGadgetItem(GadgetMap("Blue Combo"), -1, "Red", ChannelSwap_Icon_Red)
+		AddGadgetItem(GadgetMap("Blue Combo"), -1, "Green", ChannelSwap_Icon_Green)
+		AddGadgetItem(GadgetMap("Blue Combo"), -1, "Blue", ChannelSwap_Icon_Blue)
+		AddGadgetItem(GadgetMap("Blue Combo"), -1, "Alpha", ChannelSwap_Icon_Alpha)
+		SetGadgetState(GadgetMap("Blue Combo"), 2)
 		
-		
-		GadgetMap("Alpha Text") = TextGadget(#PB_Any, #Margin, #Margin + 180, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the alpha Channel")
+		GadgetMap("Alpha Text") = TextGadget(#PB_Any, #Margin, #Margin + 195, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the alpha Channel")
 		SetTitleColor(GadgetMap("Alpha Text"))
-		
+		GadgetMap("Alpha Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 215, MainWindow::TaskContainerGadgetWidth, 30)
+		SetComboColor(GadgetMap("Alpha Combo"))
+		AddGadgetItem(GadgetMap("Alpha Combo"), -1, "Red", ChannelSwap_Icon_Red)
+		AddGadgetItem(GadgetMap("Alpha Combo"), -1, "Green", ChannelSwap_Icon_Green)
+		AddGadgetItem(GadgetMap("Alpha Combo"), -1, "Blue", ChannelSwap_Icon_Blue)
+		AddGadgetItem(GadgetMap("Alpha Combo"), -1, "Alpha", ChannelSwap_Icon_Alpha)
+		SetGadgetState(GadgetMap("Alpha Combo"), 3)
 		
 	EndProcedure
 	
 	Procedure ChannelSwap_CleanUp()
 		FreeGadget(GadgetMap("Red Text"))
+		FreeGadget(GadgetMap("Red Combo"))
+		
 		FreeGadget(GadgetMap("Green Text"))
 		FreeGadget(GadgetMap("Blue Text"))
 		FreeGadget(GadgetMap("Alpha Text"))
@@ -626,54 +659,65 @@
 	
 	DataSection ;{
 		BlackAndWhite:
-		IncludeBinary "..\Media\Tinified\Black & White.png"
+		IncludeBinary "../Media/Tinified/Black & White.png"
 		
 		Blur:
-		IncludeBinary "..\Media\Tinified\Blur.png"
+		IncludeBinary "../Media/Tinified/Blur.png"
 		
 		ChannelDisplacement:
-		IncludeBinary "..\Media\Tinified\Channel Displacement.png"
+		IncludeBinary "../Media/Tinified/Channel Displacement.png"
 		
 		ChannelSwap:
-		IncludeBinary "..\Media\Tinified\Channel swap.png"
+		IncludeBinary "../Media/Tinified/Channel swap.png"
+		
+		ChannelSwap_Red:
+		IncludeBinary "../Media/Icon Channel Red.png"
+		
+		ChannelSwap_Green:
+		IncludeBinary "../Media/Icon Channel Green.png"
+		
+		ChannelSwap_Blue:
+		IncludeBinary "../Media/Icon Channel Blue.png"
+		
+		ChannelSwap_Alpha:
+		IncludeBinary "../Media/Icon Channel Alpha.png"
 		
 		ColorBalance:
-		IncludeBinary "..\Media\Tinified\Color Balance.png"
+		IncludeBinary "../Media/Tinified/Color Balance.png"
 		
 		SaveGif:
-		IncludeBinary "..\Media\Tinified\Gif.png"
+		IncludeBinary "../Media/Tinified/Gif.png"
 		
 		Invertcolor:
-		IncludeBinary "..\Media\Tinified\Invert color.png"
+		IncludeBinary "../Media/Tinified/Invert color.png"
 		
 		Outline:
-		IncludeBinary "..\Media\Tinified\Outline.png"
+		IncludeBinary "../Media/Tinified/Outline.png"
 		
 		PixelArtUpscale:
-		IncludeBinary "..\Media\Tinified\Pixel Upscale.png"
+		IncludeBinary "../Media/Tinified/Pixel Upscale.png"
 		
 		Posterization:
-		IncludeBinary "..\Media\Tinified\Posterization.png"
+		IncludeBinary "../Media/Tinified/Posterization.png"
 		
 		Resize:
-		IncludeBinary "..\Media\Tinified\Resize.png"
+		IncludeBinary "../Media/Tinified/Resize.png"
 		
 		RotSprite:
-		IncludeBinary "..\Media\Tinified\RotSprite.png"
+		IncludeBinary "../Media/Tinified/RotSprite.png"
 		
 		Save:
-		IncludeBinary "..\Media\Tinified\Save.png"
+		IncludeBinary "../Media/Tinified/Save.png"
 		
 		AlphaThreshold:
-		IncludeBinary "..\Media\Tinified\Threshold.png"
+		IncludeBinary "../Media/Tinified/Threshold.png"
 		
 		TrimImage:
-		IncludeBinary "..\Media\Tinified\Trim.png"
+		IncludeBinary "../Media/Tinified/Trim.png"
 		
 		Watermark:
-		IncludeBinary "..\Media\Tinified\Watermark.png"
+		IncludeBinary "../Media/Tinified/Watermark.png"
 		
-	
 	EndDataSection ;}
 EndModule
 
@@ -701,7 +745,8 @@ EndModule
 
 
 
-; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 212
-; Folding = BQAAAAAAAAAw
+; IDE Options = PureBasic 6.00 Beta 7 (Windows - x64)
+; CursorPosition = 149
+; FirstLine = 26
+; Folding = DQgDAAAAAAA5
 ; EnableXP
