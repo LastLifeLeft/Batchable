@@ -77,8 +77,6 @@
 		SetTrackBarColor(GadgetMap("Threshold Trackbar"))
 		BindGadgetEvent(GadgetMap("Threshold Trackbar"), @AlphaThreshold_TrackBarHandler(), #PB_EventType_Change)
 		SetGadgetState(GadgetMap("Threshold Trackbar"), *Settings\Threshold)
-		AddGadgetItem(GadgetMap("Threshold Trackbar"), 0, "")
-		AddGadgetItem(GadgetMap("Threshold Trackbar"), 255, "")
 	EndProcedure
 	
 	Procedure AlphaThreshold_CleanUp()
@@ -493,8 +491,6 @@
 		BindGadgetEvent(GadgetMap("Angle Trackbar"), @RotSprite_TrackBarHandler(), #PB_EventType_Change)
 		
 		SetGadgetState(GadgetMap("Angle Trackbar"), *Settings\Angle)
-		AddGadgetItem(GadgetMap("Angle Trackbar"), 0, "")
-		AddGadgetItem(GadgetMap("Angle Trackbar"), 360, "")
 		SetTrackBarColor(GadgetMap("Angle Trackbar"))
 	EndProcedure
 	
@@ -706,7 +702,6 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 271
-; FirstLine = 30
-; Folding = DQAAgfAAAAAw
+; CursorPosition = 212
+; Folding = BQAAAAAAAAAw
 ; EnableXP

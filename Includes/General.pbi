@@ -95,7 +95,8 @@ Module General
 	;}
 	
 EndModule
+
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 19
+; CursorPosition = 3
 ; Folding = f9
 ; EnableXP

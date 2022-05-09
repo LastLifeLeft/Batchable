@@ -292,8 +292,8 @@
 			PathWidth = VectorTextWidth("Path:")
 			
 			MovePathCursor(X + 113, Y + 57)
-			DrawVectorParagraph("Informations:", 200, 20)
-			InformationWidth = VectorTextWidth("Informations:")
+			DrawVectorParagraph("Attributes:", 200, 20)
+			InformationWidth = VectorTextWidth("Attributes:")
 			
 			VectorFont(*Item\Text\FontID)
 			MovePathCursor(X + 118 + NameWidth, Y + 15)
@@ -677,7 +677,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 420
-; FirstLine = 27
-; Folding = tpAAAA-
+; CursorPosition = 295
+; FirstLine = 42
+; Folding = tpBAAA-
 ; EnableXP
