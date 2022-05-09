@@ -73,7 +73,7 @@
 		GadgetMap("Threshold Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Threshold value:")
 		SetTitleColor(GadgetMap("Threshold Text"))
 		
-		GadgetMap("Threshold Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 0, 255, UITK::#Trackbar_ShowState | General::ColorMode)
+		GadgetMap("Threshold Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 0, 255, UITK::#Trackbar_ShowState)
 		SetTrackBarColor(GadgetMap("Threshold Trackbar"))
 		BindGadgetEvent(GadgetMap("Threshold Trackbar"), @AlphaThreshold_TrackBarHandler(), #PB_EventType_Change)
 		SetGadgetState(GadgetMap("Threshold Trackbar"), *Settings\Threshold)
@@ -215,21 +215,67 @@
 	
 	;{ Color Balance
 	Structure ColorBalance_Settings
-		Null.a
+		Red.a
+		Green.a
+		Blue.a
 	EndStructure
+	
+	Procedure ColorBalance_RedTrackBarHandler()
+		Protected *Settings.ColorBalance_Settings = *CurrentSettings
+		*Settings\Red = GetGadgetState(EventGadget())
+		Preview::Update()
+	EndProcedure
+	
+	Procedure ColorBalance_GreenTrackBarHandler()
+		Protected *Settings.ColorBalance_Settings = *CurrentSettings
+		*Settings\Green = GetGadgetState(EventGadget())
+		Preview::Update()
+	EndProcedure
+	
+	Procedure ColorBalance_BlueTrackBarHandler()
+		Protected *Settings.ColorBalance_Settings = *CurrentSettings
+		*Settings\Blue = GetGadgetState(EventGadget())
+		Preview::Update()
+	EndProcedure
 	
 	Procedure ColorBalance_Populate(*Settings.ColorBalance_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
+		GadgetMap("Red Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Red:")
+		SetTitleColor(GadgetMap("Red Text"))
+		GadgetMap("Red Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 0, 255, UITK::#Trackbar_ShowState)
+		SetGadgetColor(GadgetMap("Red Trackbar"), UITK::#Color_Special3_Cold, SetAlpha(UITK::WindowGetColor(MainWindow::Window, UITK::#Color_Special1_Cold), 255))
+		SetTrackBarColor(GadgetMap("Red Trackbar"))
+		SetGadgetState(GadgetMap("Red Trackbar"), *Settings\Red)
+		BindGadgetEvent(GadgetMap("Red Trackbar"), @ColorBalance_RedTrackBarHandler(), #PB_EventType_Change)
+		
+		GadgetMap("Green Text") = TextGadget(#PB_Any, #Margin, #Margin + 75, MainWindow::TaskContainerGadgetWidth, 15, "Green:")
+		SetTitleColor(GadgetMap("Green Text"))
+		GadgetMap("Green Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 95, MainWindow::TaskContainerGadgetWidth, 40, 0, 255, UITK::#Trackbar_ShowState)
+		SetGadgetColor(GadgetMap("Green Trackbar"), UITK::#Color_Special3_Cold, SetAlpha(UITK::WindowGetColor(MainWindow::Window, UITK::#Color_Special2_Cold), 255))
+		SetTrackBarColor(GadgetMap("Green Trackbar"))
+		SetGadgetState(GadgetMap("Green Trackbar"), *Settings\Green)
+		BindGadgetEvent(GadgetMap("Green Trackbar"), @ColorBalance_GreenTrackBarHandler(), #PB_EventType_Change)
+		
+		GadgetMap("Blue Text") = TextGadget(#PB_Any, #Margin, #Margin + 150, MainWindow::TaskContainerGadgetWidth, 15, "Blue:")
+		SetTitleColor(GadgetMap("Blue Text"))
+		GadgetMap("Blue Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 170, MainWindow::TaskContainerGadgetWidth, 40, 0, 255, UITK::#Trackbar_ShowState)
+		SetTrackBarColor(GadgetMap("Blue Trackbar"))
+		SetGadgetState(GadgetMap("Blue Trackbar"), *Settings\Blue)
+		BindGadgetEvent(GadgetMap("Blue Trackbar"), @ColorBalance_BlueTrackBarHandler(), #PB_EventType_Change)
 	EndProcedure
 	
 	Procedure ColorBalance_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
+		FreeGadget(GadgetMap("Red Text"))
+		FreeGadget(GadgetMap("Green Text"))
+		FreeGadget(GadgetMap("Blue Text"))
+		
+		UnbindGadgetEvent(GadgetMap("Red Trackbar"), @ColorBalance_RedTrackBarHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Red Trackbar"))
+		UnbindGadgetEvent(GadgetMap("Green Trackbar"), @ColorBalance_GreenTrackBarHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Green Trackbar"))
+		UnbindGadgetEvent(GadgetMap("Blue Trackbar"), @ColorBalance_BlueTrackBarHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Blue Trackbar"))
 		ClearMap(GadgetMap())
 	EndProcedure
 	
@@ -237,6 +283,9 @@
 	Task(#Task_ColorBalance)\Description = "Change the global adjustment of the intensities of the colors."
 	Task(#Task_ColorBalance)\Type = MainWindow::#TaskType_Colors
 	FillList(ColorBalance)
+	PokeA(Task(#Task_ColorBalance)\DefaultSettings, 255)
+	PokeA(Task(#Task_ColorBalance)\DefaultSettings + SizeOf(Ascii), 255)
+	PokeA(Task(#Task_ColorBalance)\DefaultSettings + SizeOf(Ascii) * 2, 255)
 	;}
 	
 	;{ Posterization
@@ -331,7 +380,7 @@
 		GadgetMap("Algorithm Text") = TextGadget(#PB_Any, #Margin, #Margin + 50, MainWindow::TaskContainerGadgetWidth, 15, "Algorithm used")
 		SetTitleColor(GadgetMap("Algorithm Text"))
 		
-		GadgetMap("Algorithm Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 70, MainWindow::TaskContainerGadgetWidth, 30, General::ColorMode)
+		GadgetMap("Algorithm Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 70, MainWindow::TaskContainerGadgetWidth, 30)
 		SetComboColor(GadgetMap("Algorithm Combo"))
 		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "Automatic (chosen for each image)")
 		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "Nearest Neighbor")
@@ -343,7 +392,7 @@
 		GadgetMap("Padding Text") = TextGadget(#PB_Any, #Margin, #Margin + 115, MainWindow::TaskContainerGadgetWidth, 15, "Aspect ratio handling")
 		SetTitleColor(GadgetMap("Padding Text"))
 		
-		GadgetMap("Padding Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 135, MainWindow::TaskContainerGadgetWidth, 30, General::ColorMode)
+		GadgetMap("Padding Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 135, MainWindow::TaskContainerGadgetWidth, 30)
 		SetComboColor(GadgetMap("Padding Combo"))
 		AddGadgetItem(GadgetMap("Padding Combo"), -1, "Scale Inner (LetterBoxing)")
 		AddGadgetItem(GadgetMap("Padding Combo"), -1, "Scale Inner (Crop)")
@@ -440,7 +489,7 @@
 		GadgetMap("Angle Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Rotation angle:")
 		SetTitleColor(GadgetMap("Angle Text"))
 		
-		GadgetMap("Angle Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 0, 360, UITK::#Trackbar_ShowState | General::ColorMode)
+		GadgetMap("Angle Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 0, 360, UITK::#Trackbar_ShowState)
 		BindGadgetEvent(GadgetMap("Angle Trackbar"), @RotSprite_TrackBarHandler(), #PB_EventType_Change)
 		
 		SetGadgetState(GadgetMap("Angle Trackbar"), *Settings\Angle)
@@ -488,7 +537,7 @@
 		GadgetMap("Scale Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Scale:")
 		SetTitleColor(GadgetMap("Scale Text"))
 		
-		GadgetMap("Scale Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 2, 5, General::ColorMode)
+		GadgetMap("Scale Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 2, 5)
 		SetTrackBarColor(GadgetMap("Scale Trackbar"))
 		AddGadgetItem(GadgetMap("Scale Trackbar"), 2, "x2")
 		AddGadgetItem(GadgetMap("Scale Trackbar"), 3, "x3")
@@ -497,9 +546,9 @@
 		SetGadgetState(GadgetMap("Scale Trackbar"), *Settings\Scale)
 		BindGadgetEvent(GadgetMap("Scale Trackbar"), @PixelArtUpscale_TrackBarHandler(), #PB_EventType_Change)
 		
-		GadgetMap("Algorithm Text") = TextGadget(#PB_Any, #Margin, #Margin + 73, MainWindow::TaskContainerGadgetWidth, 15, "Algorithm:")
+		GadgetMap("Algorithm Text") = TextGadget(#PB_Any, #Margin, #Margin + 75, MainWindow::TaskContainerGadgetWidth, 15, "Algorithm:")
 		SetTitleColor(GadgetMap("Algorithm Text"))
-		GadgetMap("Algorithm Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 93, MainWindow::TaskContainerGadgetWidth, 30, General::ColorMode)
+		GadgetMap("Algorithm Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 95, MainWindow::TaskContainerGadgetWidth, 30)
 		SetComboColor(GadgetMap("Algorithm Combo"))
 		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "xBR")
 		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "HQx")
@@ -657,6 +706,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 581
-; Folding = BAAAAAAAgAA+
+; CursorPosition = 271
+; FirstLine = 30
+; Folding = DQAAgfAAAAAw
 ; EnableXP

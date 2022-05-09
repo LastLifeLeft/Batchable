@@ -421,13 +421,11 @@
 	
 	Procedure Handler_SetupTask()
 		Protected *Data.TaskListInfo = GetGadgetItemData(TaskList, GetGadgetState(TaskList))
+		OpenGadgetList(TaskSettingContainer)
+		Tasks::Task(*Data\TaskID)\Populate(*Data\TaskSettings)
+		CloseGadgetList()
 		HideGadget(TaskList, #True)
 		HideGadget(TaskSettingContainer, #False)
-		OpenGadgetList(TaskSettingContainer)
-		
-		Tasks::Task(*Data\TaskID)\Populate(*Data\TaskSettings)
-		
-		CloseGadgetList()
 	EndProcedure
 	
 	Procedure Handler_RemoveTask()
@@ -679,7 +677,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 152
-; FirstLine = 3
+; CursorPosition = 420
+; FirstLine = 27
 ; Folding = tpAAAA-
 ; EnableXP
