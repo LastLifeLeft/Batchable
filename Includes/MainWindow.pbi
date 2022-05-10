@@ -78,6 +78,7 @@
 	Global BoldFont = FontID(LoadFont(#PB_Any, "Segoe UI", 9, #PB_Font_HighQuality | #PB_Font_Bold))
 	Global ImageLoading, ImageError, ImageLoadingID
 	Global PreviewMutex, PreviewThread, NewList PreviewList.PreviewLoading()
+	Global Menu
 	
 	#SupportedFileTypes = "jpgjpegpngbmptifftga"
 	
@@ -116,6 +117,19 @@
 	#Iconbar_Size = 30
 	#Iconbar_Offset = 5
 	#ButtonBack_Size = 30
+	
+	Enumeration ;Menu
+		#Menu_OpenImages
+		#Menu_OpenFolder
+		#Menu_Settings
+		#Menu_Quit
+		#Menu_LoadTasks
+		#Menu_SaveTasks
+		#Menu_ShowPreview
+		#Menu_About
+		#Menu_Help
+		#Menu_VisitSite
+	EndEnumeration
 	;}
 	
 	;{ Private procedures declaration
@@ -269,6 +283,34 @@
 		SetGadgetColor(TaskSettingReturnButton, UITK::#Color_Back_Hot, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Hot), 255))
 		
 		CloseGadgetList()
+		
+		Menu = UITK::FlatMenu(General::ColorMode)
+		UITK::AddFlatMenuItem(Menu, #Menu_OpenImages, -1, "Add images")
+		UITK::AddFlatMenuItem(Menu, #Menu_OpenFolder, -1, "Add Folder")
+		UITK::AddFlatMenuSeparator(Menu, -1)
+		UITK::AddFlatMenuItem(Menu, #Menu_Settings, -1, "Preferences")
+		UITK::AddFlatMenuSeparator(Menu, -1)
+		UITK::AddFlatMenuItem(Menu, #Menu_Quit, -1, "Exit")
+		UITK::AddWindowMenu(Window, Menu, "Files")
+		
+		Menu = UITK::FlatMenu(General::ColorMode)
+		UITK::AddFlatMenuItem(Menu, #Menu_LoadTasks, -1, "Load task list")
+		UITK::AddFlatMenuItem(Menu, #Menu_SaveTasks, -1, "Save task list")
+		UITK::AddFlatMenuSeparator(Menu, -1)
+		UITK::AddFlatMenuItem(Menu, #Menu_ShowPreview, -1, "Show preview window")
+		UITK::AddWindowMenu(Window, Menu, "Tasks")
+		
+		Menu = UITK::FlatMenu(General::ColorMode)
+		UITK::AddFlatMenuItem(Menu, #Menu_About, -1, "About Batchable")
+		UITK::AddFlatMenuItem(Menu, #Menu_Help, -1, "Usage guide")
+		UITK::AddFlatMenuItem(Menu, #Menu_VisitSite, -1, "Visit ♥x1")
+		UITK::AddWindowMenu(Window, Menu, "Help")
+		
+		CreatePopupMenu(0) ;< ╯︿╰ can't bind menu event without that ...
+		
+		BindMenuEvent(0, #Menu_OpenImages, @Handler_AddImage())
+		BindMenuEvent(0, #Menu_OpenFolder, @Handler_AddFolder())
+		BindMenuEvent(0, #Menu_Quit, @Handler_Close())
 		
 		HideWindow(Window, #False)
 	EndProcedure
@@ -677,7 +719,6 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 7 (Windows - x64)
-; CursorPosition = 159
-; FirstLine = 24
-; Folding = t6AAAA-
+; CursorPosition = 168
+; Folding = thAAAA-
 ; EnableXP

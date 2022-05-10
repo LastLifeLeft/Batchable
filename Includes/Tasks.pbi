@@ -702,6 +702,8 @@
 	FillList(Save)
 	;}
 	
+	;-TODO : Crop
+	
 	DataSection ;{
 		BlackAndWhite:
 		IncludeBinary "../Media/Tinified/Black & White.png"
@@ -729,6 +731,9 @@
 		
 		ColorBalance:
 		IncludeBinary "../Media/Tinified/Color Balance.png"
+		
+		Crop:
+		IncludeBinary "../Media/Tinified/Crop.png"
 		
 		SaveGif:
 		IncludeBinary "../Media/Tinified/Gif.png"
@@ -791,6 +796,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 7 (Windows - x64)
-; CursorPosition = 2
-; Folding = BAAgAAAAAAAA9
+; CursorPosition = 735
+; FirstLine = 36
+; Folding = BAAgAAAAAAAA+
 ; EnableXP

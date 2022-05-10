@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 6.00 Beta 7 (Windows - x86)">
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 6.00 Beta 7 (Windows - x64)">
   <section name="config">
     <options closefiles="1" openmode="0" name="Batchable"/>
     <comment>Free and open source multithreaded batch image processing.</comment>
@@ -9,7 +9,7 @@
   <section name="data">
     <explorer view="C:\ProgramData\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2022-05-10 08:41" user="Poshu" host="MONSTRO"/>
+    <lastopen date="2022-05-10 17:15" user="Poshu" host="MONSTRO"/>
   </section>
   <section name="files">
     <file name="Includes\General.pbi">
@@ -18,7 +18,7 @@
     </file>
     <file name="Includes\MainWindow.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="95876f73833a6b88bfcfe695371d82ac"/>
+      <fingerprint md5="ec39f46eba79a3a97d9556641cc0183e"/>
     </file>
     <file name="Includes\Preview.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
@@ -26,7 +26,7 @@
     </file>
     <file name="Includes\Tasks.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="762e98b1cf7b311b7994ce1eb6f00c9f"/>
+      <fingerprint md5="58cc0c705a65726c537462cc350c3dd9"/>
     </file>
     <file name="Main.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="+"/>
@@ -34,7 +34,7 @@
     </file>
     <file name="UI-Toolkit\Library\UI-Toolkit.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="+++"/>
-      <fingerprint md5="c875cf6f6e803c14bdc630e54a596cde"/>
+      <fingerprint md5="c09737878b8fe2e9ae5343e648866667"/>
     </file>
   </section>
   <section name="targets">
