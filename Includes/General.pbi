@@ -17,6 +17,15 @@ DeclareModule MainWindow
 		#TaskType_Other
 	EndEnumeration
 	
+	#MenuBar_Height = 0
+	#Window_Margin = 12
+	#Window_Height = 500
+	#Window_Width = 950
+	#ImageList_Width = 400
+	#Iconbar_Size = 30
+	#Iconbar_Offset = 5
+	#ButtonBack_Size = 30
+	
 	Global Window
 	
 	Global TaskContainerWidth, TaskContainerGadgetWidth
@@ -43,6 +52,7 @@ DeclareModule Tasks
 		#Task_PixelartUpscale
 		#Task_SaveGif
 		#Task_Save
+		#Task_Crop
 		
 		#__Task_Count
 	EndEnumeration
@@ -68,6 +78,9 @@ DeclareModule Tasks
 EndDeclareModule
 
 DeclareModule Preview
+	Global Window
+	
+	Declare Open()
 	Declare Update()
 EndDeclareModule
 
@@ -96,7 +109,7 @@ Module General
 	
 EndModule
 
-; IDE Options = PureBasic 6.00 Beta 6 (Windows - x64)
-; CursorPosition = 3
+; IDE Options = PureBasic 6.00 Beta 7 (Windows - x64)
+; CursorPosition = 18
 ; Folding = f9
 ; EnableXP

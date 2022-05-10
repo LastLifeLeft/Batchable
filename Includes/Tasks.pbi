@@ -549,6 +549,32 @@
 	FillList(Watermark)
 	;}
 	
+	;{ Crop options
+	Structure Crop_Settings
+		Null.a
+	EndStructure
+	
+	Procedure Crop_Populate(*Settings.Crop_Settings)
+		*CurrentSettings = *Settings
+		
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
+		SetTitleColor(GadgetMap("Title Text"))
+		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
+		SetTextColor(GadgetMap("Description Text"))
+	EndProcedure
+	
+	Procedure Crop_CleanUp()
+		FreeGadget(GadgetMap("Title Text"))
+		FreeGadget(GadgetMap("Description Text"))
+		ClearMap(GadgetMap())
+	EndProcedure
+	
+	Task(#Task_Crop)\Name = "Crop"
+	Task(#Task_Crop)\Description = "Something something, croping image something something."
+	Task(#Task_Crop)\Type = MainWindow::#TaskType_Transformation
+	FillList(Crop)
+	;}
+	
 	;{ RotSprite
 	Structure RotSprite_Settings
 		Angle.w
@@ -702,8 +728,6 @@
 	FillList(Save)
 	;}
 	
-	;-TODO : Crop
-	
 	DataSection ;{
 		BlackAndWhite:
 		IncludeBinary "../Media/Tinified/Black & White.png"
@@ -796,7 +820,6 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 7 (Windows - x64)
-; CursorPosition = 735
-; FirstLine = 36
-; Folding = BAAgAAAAAAAA+
+; CursorPosition = 572
+; Folding = BAAgAAAAAQAAg
 ; EnableXP

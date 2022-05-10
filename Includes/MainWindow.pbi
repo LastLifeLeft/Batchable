@@ -109,15 +109,6 @@
 	StrokePath(4)
 	StopVectorDrawing()
 	
-	#MenuBar_Height = 0
-	#Window_Margin = 12
-	#Window_Height = 500
-	#Window_Width = 950
-	#ImageList_Width = 400
-	#Iconbar_Size = 30
-	#Iconbar_Offset = 5
-	#ButtonBack_Size = 30
-	
 	Enumeration ;Menu
 		#Menu_OpenImages
 		#Menu_OpenFolder
@@ -153,6 +144,8 @@
 	Declare Handler_NewTaskCombo()
 	Declare Handler_NewTaskList()
 	Declare Handler_NewTaskReturn()
+	
+	Declare Handler_Menu_Preview()
 	
 	Declare Handler_TaskSettingReturn()
 	
@@ -311,6 +304,8 @@
 		BindMenuEvent(0, #Menu_OpenImages, @Handler_AddImage())
 		BindMenuEvent(0, #Menu_OpenFolder, @Handler_AddFolder())
 		BindMenuEvent(0, #Menu_Quit, @Handler_Close())
+		
+		BindMenuEvent(0, #Menu_ShowPreview, @Handler_Menu_Preview())
 		
 		HideWindow(Window, #False)
 	EndProcedure
@@ -517,6 +512,10 @@
 		HideGadget(TaskList, #False)
 	EndProcedure
 	
+	Procedure Handler_Menu_Preview()
+		Preview::Open()
+	EndProcedure
+	
 	Procedure Handler_Close()
 		Protected phandle, Result
 		phandle = OpenProcess_(#PROCESS_TERMINATE, #False, GetCurrentProcessId_()) ;< I clearly have issues with my windows, but killing the process is a valid workaround for my own ineptitude.
@@ -719,6 +718,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 7 (Windows - x64)
-; CursorPosition = 168
-; Folding = thAAAA-
+; CursorPosition = 110
+; FirstLine = 36
+; Folding = tlAAAB+
 ; EnableXP
