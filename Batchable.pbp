@@ -9,7 +9,7 @@
   <section name="data">
     <explorer view="C:\ProgramData\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2022-05-10 22:13" user="Poshu" host="MONSTRO"/>
+    <lastopen date="2022-05-11 12:58" user="Poshu" host="MONSTRO"/>
   </section>
   <section name="files">
     <file name="Includes\General.pbi">
@@ -22,7 +22,7 @@
     </file>
     <file name="Includes\Preview.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="5f7bc30cd6c8ae15ffe1e2b8b9021394"/>
+      <fingerprint md5="c2811e90db6f0134f3bf1d631ace2153"/>
     </file>
     <file name="Includes\Tasks.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
