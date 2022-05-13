@@ -73,7 +73,7 @@
 		*Data.OriginalImageInfo
 	EndStructure
 	
-	Global ImageList, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, TaskList, ButtonAddTask, ButtonSetupTask, ButtonRemoveTask, ButtonProcess, NewTaskContainer, NewTaskReturnButton, NewTaskCombo, NewTaskList, NewTaskButton
+	Global ImageList, ImageContainer, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, TaskList, TaskContainer, ButtonAddTask, ButtonSetupTask, ButtonRemoveTask, ButtonProcess, NewTaskContainer, NewTaskReturnButton, NewTaskCombo, NewTaskList, NewTaskButton
 	Global TaskSettingContainer, TaskSettingReturnButton, NewList TaskSettingList()
 	Global BoldFont = FontID(LoadFont(#PB_Any, "Segoe UI", 9, #PB_Font_HighQuality | #PB_Font_Bold))
 	Global ImageLoading, ImageError, ImageLoadingID
@@ -121,6 +121,8 @@
 		#Menu_Help
 		#Menu_VisitSite
 	EndEnumeration
+	
+	#ToolBarHeight = 40
 	;}
 	
 	;{ Private procedures declaration
@@ -167,7 +169,9 @@
 		UITK::SetWindowIcon(Window, ImageID(CatchImage(#PB_Any, ?Icon)))
 		BindEvent(#PB_Event_GadgetDrop, @Handler_Drop())
 		
-		ImageList = UITK::VerticalList(#PB_Any, #Window_Margin, #MenuBar_Height + #Window_Margin, #ImageList_Width, #Window_Height - #MenuBar_Height - #Window_Margin * 2, UITK::#VList_Toolbar | UITK::#ReOrder, @ImageList_ItemRedraw())
+		ImageContainer = UITK::Container(#PB_Any, #Window_Margin, #MenuBar_Height + #Window_Margin, #ImageList_Width, #Window_Height - #MenuBar_Height - #Window_Margin * 2)
+		ImageList = UITK::VerticalList(#PB_Any, 0, #ToolBarHeight, #ImageList_Width, #Window_Height - #MenuBar_Height - #Window_Margin * 2 - #ToolBarHeight, UITK::#ReOrder, @ImageList_ItemRedraw())
+		SetGadgetAttribute(ImageList, UITK::#Attribute_CornerType, UITK::#Corner_Bottom)
 		SetGadgetAttribute(ImageList, UITK::#Attribute_CornerRadius, 5)
 		SetGadgetAttribute(ImageList, UITK::#Attribute_ItemHeight, 90)
 		EnableGadgetDrop(ImageList, #PB_Drop_Files, #PB_Drag_Move)
@@ -188,7 +192,9 @@
 		UITK::Disable(ButtonRemoveImage, #True)
 		CloseGadgetList()
 		
-		TaskList = UITK::VerticalList(#PB_Any, #Window_Margin * 2 + #ImageList_Width, #MenuBar_Height + #Window_Margin, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2, UITK::#VList_Toolbar | UITK::#ReOrder, @TaskList_ItemRedraw())
+		TaskContainer = UITK::Container(#PB_Any, #Window_Margin * 2 + #ImageList_Width, #MenuBar_Height + #Window_Margin, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2)
+		TaskList = UITK::VerticalList(#PB_Any, 0, #ToolBarHeight, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2 - #ToolBarHeight, UITK::#ReOrder, @TaskList_ItemRedraw())
+		SetGadgetAttribute(TaskList, UITK::#Attribute_CornerType, UITK::#Corner_Bottom)
 		SetGadgetAttribute(TaskList, UITK::#Attribute_ItemHeight, 60)
 		SetGadgetAttribute(TaskList, UITK::#Attribute_CornerRadius, 5)
 		BindGadgetEvent(TaskList, @Handler_TaskList(), #PB_EventType_Change)
@@ -237,6 +243,7 @@
 		BindGadgetEvent(NewTaskCombo, @Handler_NewTaskCombo(), #PB_EventType_Change)
 		
 		NewTaskList = UITK::VerticalList(#PB_Any, 0, #Iconbar_Offset * 2 + #ButtonBack_Size, TaskContainerWidth, GadgetHeight(NewTaskContainer) - #Iconbar_Offset * 4 - #ButtonBack_Size * 2, UITK::#Default, @TaskList_ItemRedraw())
+		SetGadgetAttribute(NewTaskList, UITK::#Attribute_CornerRadius, 0)
 		BindGadgetEvent(NewTaskList, @Handler_NewTaskList(), #PB_EventType_Change)
 		BindGadgetEvent(NewTaskList, @Handler_NewTaskButton(), UITK::#Eventtype_ForcefulChange)
 		SetGadgetAttribute(NewTaskList, UITK::#Attribute_ItemHeight, 60)
@@ -452,7 +459,7 @@
 	EndProcedure
 	
 	Procedure Handler_NewTask()
-		HideGadget(TaskList, #True)
+		HideGadget(TaskContainer, #True)
 		HideGadget(NewTaskContainer, #False)
 	EndProcedure
 	
@@ -492,7 +499,7 @@
 	EndProcedure
 	
 	Procedure Handler_NewTaskReturn()
-		HideGadget(TaskList, #False)
+		HideGadget(TaskContainer, #False)
 		HideGadget(NewTaskContainer, #True)
 	EndProcedure
 	
@@ -509,7 +516,7 @@
 		
 		Tasks::Task(*Data\TaskID)\CleanUp()
 		HideGadget(TaskSettingContainer, #True)
-		HideGadget(TaskList, #False)
+		HideGadget(TaskContainer, #False)
 	EndProcedure
 	
 	Procedure Handler_Menu_Preview()
@@ -718,7 +725,6 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 7 (Windows - x64)
-; CursorPosition = 110
-; FirstLine = 36
-; Folding = tlAAAB+
+; CursorPosition = 319
+; Folding = thAAAA+
 ; EnableXP
