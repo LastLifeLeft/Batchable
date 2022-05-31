@@ -170,6 +170,7 @@
 		BindEvent(#PB_Event_GadgetDrop, @Handler_Drop())
 		
 		ImageContainer = UITK::Container(#PB_Any, #Window_Margin, #MenuBar_Height + #Window_Margin, #ImageList_Width, #Window_Height - #MenuBar_Height - #Window_Margin * 2)
+		SetGadgetAttribute(ImageContainer, UITK::#Attribute_CornerRadius, 5)
 		ImageList = UITK::VerticalList(#PB_Any, 0, #ToolBarHeight, #ImageList_Width, #Window_Height - #MenuBar_Height - #Window_Margin * 2 - #ToolBarHeight, UITK::#ReOrder, @ImageList_ItemRedraw())
 		SetGadgetAttribute(ImageList, UITK::#Attribute_CornerType, UITK::#Corner_Bottom)
 		SetGadgetAttribute(ImageList, UITK::#Attribute_CornerRadius, 5)
@@ -193,6 +194,7 @@
 		CloseGadgetList()
 		
 		TaskContainer = UITK::Container(#PB_Any, #Window_Margin * 2 + #ImageList_Width, #MenuBar_Height + #Window_Margin, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2)
+		SetGadgetAttribute(TaskContainer, UITK::#Attribute_CornerRadius, 5)
 		TaskList = UITK::VerticalList(#PB_Any, 0, #ToolBarHeight, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2 - #ToolBarHeight, UITK::#ReOrder, @TaskList_ItemRedraw())
 		SetGadgetAttribute(TaskList, UITK::#Attribute_CornerType, UITK::#Corner_Bottom)
 		SetGadgetAttribute(TaskList, UITK::#Attribute_ItemHeight, 60)
@@ -468,7 +470,7 @@
 		OpenGadgetList(TaskSettingContainer)
 		Tasks::Task(*Data\TaskID)\Populate(*Data\TaskSettings)
 		CloseGadgetList()
-		HideGadget(TaskList, #True)
+		HideGadget(TaskContainer, #True)
 		HideGadget(TaskSettingContainer, #False)
 	EndProcedure
 	
@@ -724,7 +726,8 @@ EndModule
 
 
 
-; IDE Options = PureBasic 6.00 Beta 7 (Windows - x64)
-; CursorPosition = 319
-; Folding = thAAAA+
+; IDE Options = PureBasic 6.00 Beta 8 (Windows - x64)
+; CursorPosition = 472
+; Folding = thAgAA+
 ; EnableXP
+; DPIAware
