@@ -46,6 +46,7 @@
 		Image.i
 		Path.s
 		Information.s
+		File.s
 	EndStructure
 	
 	Structure AddListInfo
@@ -77,7 +78,7 @@
 	Global TaskSettingContainer, TaskSettingReturnButton, NewList TaskSettingList()
 	Global BoldFont = FontID(LoadFont(#PB_Any, "Segoe UI", 9, #PB_Font_HighQuality | #PB_Font_Bold))
 	Global ImageLoading, ImageError, ImageLoadingID
-	Global PreviewMutex, PreviewThread, NewList PreviewList.PreviewLoading()
+	Global PreviewMutex, MiniatureThreat, NewList PreviewList.PreviewLoading()
 	Global Menu
 	
 	#SupportedFileTypes = "jpgjpegpngbmptifftga"
@@ -131,6 +132,7 @@
 	
 	Declare Handler_Drop()
 	Declare Handler_ImageList()
+	Declare Handler_ImageList_Forceful()
 	Declare Handler_ImageList_Keyboard()
 	Declare Handler_AddImage()
 	Declare Handler_AddFolder()
@@ -153,7 +155,7 @@
 	
 	Declare Handler_Close()
 	
-	Declare Thread_LoadPreview(Null)
+	Declare Thread_LoadMiniature(Null)
 	
 	Declare Populate_TaskList(Type)
 	Declare AddImageToQueue(File.s)
@@ -177,6 +179,7 @@
 		SetGadgetAttribute(ImageList, UITK::#Attribute_ItemHeight, 90)
 		EnableGadgetDrop(ImageList, #PB_Drop_Files, #PB_Drag_Move)
 		BindGadgetEvent(ImageList, @Handler_ImageList(), #PB_EventType_Change)
+		BindGadgetEvent(ImageList, @Handler_ImageList_Forceful(), UITK::#Eventtype_ForcefulChange)
 		BindGadgetEvent(ImageList, @Handler_ImageList_Keyboard(), #PB_EventType_KeyDown)
 		
 		ButtonAddImage = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "a")
@@ -372,14 +375,23 @@
 	EndProcedure
 	
 	Procedure Handler_ImageList()
-		If GetGadgetState(ImageList) = -1
+		Protected *Data.OriginalImageInfo, State = GetGadgetState(ImageList)
+		
+		If State = -1
 			UITK::Disable(ButtonRemoveImage, #True)
 			If CountGadgetItems(ImageList) = 0
 				UITK::Disable(ButtonProcess, #True)
 			EndIf
 		Else
+			*Data = GetGadgetItemData(ImageList, State)
+			SelectedImagePath = *Data\File
 			UITK::Disable(ButtonRemoveImage, #False)
+			Preview::Update()
 		EndIf
+	EndProcedure
+	
+	Procedure Handler_ImageList_Forceful()
+		Preview::Open(#True)
 	EndProcedure
 	
 	Procedure Handler_ImageList_Keyboard()
@@ -447,8 +459,10 @@
 				UITK::Disable(ButtonProcess, #True)
 			EndIf
 		Else
+			SelectedTaskIndex = GetGadgetState(TaskList)
 			UITK::Disable(ButtonRemoveTask, #False)
 			UITK::Disable(ButtonSetupTask, #False)
+			Preview::Update()
 		EndIf
 	EndProcedure
 	
@@ -531,7 +545,7 @@
 		TerminateProcess_(phandle, @Result)
 	EndProcedure
 	
-	Procedure Thread_LoadPreview(Null)
+	Procedure Thread_LoadMiniature(Null)
 		Protected *Data.OriginalImageInfo, File.s, Finished = #False, Image, FinalImage, Width, Height
 		
 		Repeat
@@ -542,7 +556,7 @@
 		DeleteElement(PreviewList())
 		
 		If ListSize(PreviewList()) = 0
-			PreviewThread = 0
+			MiniatureThreat = 0
 			Finished = #True
 		EndIf
 		UnlockMutex(PreviewMutex)
@@ -636,6 +650,7 @@
 					*Data\Information = "Loading..."
 					Path = GetPathPart(File)
 					*Data\Path = Left(Path, Len(Path) -1)
+					*Data\File = File
 					
 					SetGadgetItemData(ImageList, AddGadgetItem(ImageList, -1, GetFilePart(File)), *Data)
 					AddElement(PreviewList())
@@ -652,8 +667,8 @@
 			EndIf
  		Next
  		
- 		If PreviewThread = 0 And NewImageToProcess
- 			PreviewThread = CreateThread(@Thread_LoadPreview(), #Null)
+ 		If MiniatureThreat = 0 And NewImageToProcess
+ 			MiniatureThreat = CreateThread(@Thread_LoadMiniature(), #Null)
  		EndIf
  		
  		If CountGadgetItems(ImageList) And CountGadgetItems(TaskList)
@@ -727,7 +742,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 8 (Windows - x64)
-; CursorPosition = 472
-; Folding = thAgAA+
+; CursorPosition = 36
+; Folding = tBQAAA9
 ; EnableXP
 ; DPIAware

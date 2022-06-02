@@ -19,7 +19,7 @@ DeclareModule MainWindow
 	
 	#MenuBar_Height = 0
 	#Window_Margin = 12
-	#Window_Height = 500
+	#Window_Height = 501
 	#Window_Width = 950
 	#ImageList_Width = 400
 	#Iconbar_Size = 30
@@ -30,6 +30,8 @@ DeclareModule MainWindow
 	
 	Global TaskContainerWidth, TaskContainerGadgetWidth
 	Global TaskContainerBackColor, TaskContainerFrontColor
+	
+	Global SelectedImagePath.s, SelectedTaskIndex
 	
 	Declare Open()
 EndDeclareModule
@@ -80,8 +82,9 @@ EndDeclareModule
 DeclareModule Preview
 	Global Window
 	
-	Declare Open()
+	Declare Open(Forced = #False)
 	Declare Update()
+	Declare Resize()
 EndDeclareModule
 
 Module General
@@ -109,7 +112,9 @@ Module General
 	
 EndModule
 
-; IDE Options = PureBasic 6.00 Beta 7 (Windows - x64)
-; CursorPosition = 18
+; IDE Options = PureBasic 6.00 Beta 8 (Windows - x64)
+; CursorPosition = 48
+; FirstLine = 43
 ; Folding = f9
 ; EnableXP
+; DPIAware

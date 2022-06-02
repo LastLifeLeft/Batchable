@@ -819,7 +819,8 @@ EndModule
 
 
 
-; IDE Options = PureBasic 6.00 Beta 7 (Windows - x64)
-; CursorPosition = 572
-; Folding = BAAgAAAAAQAAg
+; IDE Options = PureBasic 6.00 Beta 8 (Windows - x64)
+; CursorPosition = 7
+; Folding = BAAgAAAAAAAAg
 ; EnableXP
+; DPIAware

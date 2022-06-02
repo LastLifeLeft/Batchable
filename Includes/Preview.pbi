@@ -1,4 +1,5 @@
 ﻿Module Preview
+	EnableExplicit
 	
 	CompilerIf #PB_Compiler_OS = #PB_OS_Windows ; Fix color
 		Macro FixColor(Color)
@@ -23,70 +24,126 @@
 	#CornerSize = 5
 	
 	Global Container, Width = 800, Height = 600, X = -1, Y = -1
-	Global WindowColor, GadgetColor
-	Global CornerTL, CornerDL, CornerTR, CornerDR
-	Global CornerTL_Image = ImageID(CatchImage(#PB_Any, ?_CornerTL)), CornerDL_Image = ImageID(CatchImage(#PB_Any, ?_CornerDL)), CornerTR_Image = ImageID(CatchImage(#PB_Any, ?_CornerTR)), CornerDR_Image = ImageID(CatchImage(#PB_Any, ?_CornerDR))
+	Global WindowColor, GadgetColor, Canvas
+	
+	Global CurrentImagePath.s, CurrentImageSource.i, CurrentImagePreviousTask.i, CurrentImage.i, PreviewImage.i, CurrentTaskID.i
+	Global CanvasHeight, CanvasWidth, PreviewImageWidth, PreviewImageHeight, DisplayedWidth, DisplayedHeight
 	
 	;Private procedure declaration
-	Declare Handler_WindowSize()
 	Declare Handler_WindowClose()
+	Declare Handler_WindowResize()
 	
 	Declare Redraw()
 	
 	;Public procedure
-	Procedure Open()
+	Procedure Open(Forced = #False)
 		If Window
-			Handler_WindowClose()
+			If Not Forced
+				Handler_WindowClose()
+			EndIf
 		Else
+			ExamineDesktops()
 			Window = UITK::Window(#PB_Any, X, Y, Width, Height, General::#AppName + " Preview", UITK::#Window_CloseButton | #PB_Window_SizeGadget | (Bool(X = -1 And Y = -1) * #PB_Window_ScreenCentered) | #PB_Window_Invisible | General::ColorMode)
-			UITK::SetWindowBounds(Window, 800, 600, -1, -1)
+			UITK::SetWindowBounds(Window, 800, 600, DesktopWidth(0), DesktopHeight(0)) ; A dirty hack to avoid flickering. Can't we resize a canvas without it reverting to white?
 			WindowColor = SetAlpha(UITK::WindowGetColor(Window, UITK::#Color_Parent), 255)
 			GadgetColor = SetAlpha(UITK::WindowGetColor(Window, UITK::#Color_Shade_Cold), 255)
 			
 			Container = ContainerGadget(#PB_Any, MainWindow::#Window_Margin, MainWindow::#Window_Margin, WindowWidth(Window) - 2 * MainWindow::#Window_Margin, WindowHeight(Window) - 30 - 2 * MainWindow::#Window_Margin, #PB_Container_BorderLess)
-			SetGadgetColor(Container, #PB_Gadget_BackColor, UITK::WindowGetColor(Window, UITK::#Color_Shade_Cold))
-			CornerTL = GadgetID(ImageGadget(#PB_Any, 0, 0, #CornerSize, #CornerSize, CornerTL_Image))
-			CornerDL = GadgetID(ImageGadget(#PB_Any, 0, GadgetHeight(Container) - #CornerSize, #CornerSize, #CornerSize, CornerDL_Image))
-			CornerTR = GadgetID(ImageGadget(#PB_Any, GadgetWidth(Container) - #CornerSize, 0, #CornerSize, #CornerSize, CornerTR_Image))
-			CornerDR = GadgetID(ImageGadget(#PB_Any, GadgetWidth(Container) - #CornerSize, GadgetHeight(Container) - #CornerSize, #CornerSize, #CornerSize, CornerDR_Image))
 			
-			
-; 			Canvas = CanvasGadget(#PB_Any, MainWindow::#Window_Margin, MainWindow::#Window_Margin, WindowWidth(Window) - 2 * MainWindow::#Window_Margin, WindowHeight(Window) - 30 - 2 * MainWindow::#Window_Margin)
+			Canvas = CanvasGadget(#PB_Any, 0, 0, DesktopWidth(0), DesktopHeight(0))
+			CloseGadgetList()
 			BindEvent(#PB_Event_CloseWindow, @Handler_WindowClose(), Window)
-			BindEvent(#PB_Event_SizeWindow, @Handler_WindowSize(), Window)
-			Redraw()
+			BindEvent(#PB_Event_SizeWindow, @Handler_WindowResize(), Window)
+			Handler_WindowResize()
+			Resize()
 			HideWindow(Window, #False)
 		EndIf
 		
-; 		CreateImage(32, 128, 128, 32, #PB_Image_Transparent)
-; 		StartVectorDrawing(ImageVectorOutput(32))
-; 		AddPathBox(0, 0, 128, 128)
-; 		VectorSourceColor(WindowColor)
-; 		FillPath()
-; 		UITK::AddPathRoundedBox(0, 0, 128, 128, 5)
-; 		VectorSourceColor(GadgetColor)
-; 		FillPath()
-; 		
-; 		StopVectorDrawing()
-; 		
-; 		UsePNGImageEncoder()
-; 		SaveImage(32, "D:\Documents\Border.png", #PB_ImagePlugin_PNG)
 	EndProcedure
 	
 	Procedure Update()
+		If MainWindow::SelectedImagePath <> CurrentImagePath
+			If CurrentImageSource
+				FreeImage(CurrentImageSource)
+				CurrentImageSource = 0
+			EndIf
+			
+			If CurrentImagePreviousTask
+				FreeImage(CurrentImagePreviousTask)
+				CurrentImagePreviousTask = 0
+			EndIf
+			
+			If CurrentImage
+				FreeImage(CurrentImage)
+				CurrentImage = 0
+			EndIf
+			
+			If PreviewImage
+				FreeImage(PreviewImage)
+				PreviewImage = 0
+			EndIf
+			
+			CurrentImagePath = MainWindow::SelectedImagePath
+			
+		EndIf
+		
+		If CurrentImagePath
+			CurrentImageSource = LoadImage(#PB_Any, CurrentImagePath)
+		EndIf
+		
+		; Do the tasks
+		If CurrentImageSource
+			CurrentImage = CopyImage(CurrentImageSource, #PB_Any)
+		EndIf
+		
+		If Window
+			Resize()
+		EndIf
+	EndProcedure
+	
+	Procedure Resize()
+		Protected ImageWidth, ImageHeight, HRatio.d, VRatio.d
+		
+		If CurrentImage
+			ImageWidth = ImageWidth(CurrentImage)
+			ImageHeight = ImageHeight(CurrentImage)
+			
+			If ImageWidth > CanvasWidth Or ImageHeight > CanvasHeight
+				HRatio = CanvasWidth / ImageWidth
+				VRatio = CanvasHeight / ImageHeight
+				
+				If VRatio < HRatio
+					DisplayedHeight = CanvasHeight
+					DisplayedWidth = ImageWidth * VRatio
+				Else
+					DisplayedWidth = CanvasWidth
+					DisplayedHeight = ImageHeight * HRatio
+				EndIf
+				
+				If PreviewImage
+					FreeImage(PreviewImage)
+				EndIf
+				
+				PreviewImage = CopyImage(CurrentImage, #PB_Any)
+				ResizeImage(PreviewImage, DisplayedWidth, DisplayedHeight, #PB_Image_Smooth)
+				
+			Else
+				DisplayedWidth = ImageWidth
+				DisplayedHeight = ImageHeight
+				
+				If PreviewImage
+					FreeImage(PreviewImage)
+				EndIf
+				
+				PreviewImage = CopyImage(CurrentImage, #PB_Any)
+			EndIf
+		EndIf
+		
+		Redraw()
 		
 	EndProcedure
 	
 	;Private procedure
-	Procedure Handler_WindowSize()
-		Protected Height = WindowHeight(Window) - 30 - 2 * MainWindow::#Window_Margin, Width = WindowWidth(Window) - 2 * MainWindow::#Window_Margin
-		ResizeGadget(Container, #PB_Ignore, #PB_Ignore, Width, Height)
-		SetWindowPos_(CornerDL, 0, 0, Height - #CornerSize, 0, 0, #SWP_NOZORDER | #SWP_NOACTIVATE | #SWP_NOSIZE)
-		SetWindowPos_(CornerTR, 0, Width - #CornerSize, 0, 0, 0, #SWP_NOZORDER | #SWP_NOACTIVATE | #SWP_NOSIZE)
-		SetWindowPos_(CornerDR, 0, Width - #CornerSize, Height - #CornerSize, 0, 0, #SWP_NOZORDER | #SWP_NOACTIVATE | #SWP_NOSIZE)
-;   		SetWindowPos_(GadgetID(Canvas), 0, 0, 0, WindowWidth(Window) - 2 * MainWindow::#Window_Margin, WindowHeight(Window) - 30 - 2 * MainWindow::#Window_Margin, #SWP_NOMOVE | #SWP_NOZORDER)
-		Redraw()
-	EndProcedure
 	
 	Procedure Handler_WindowClose()
 		Width = WindowWidth(Window)
@@ -98,34 +155,38 @@
 		Window = 0
 	EndProcedure
 	
-	Procedure Redraw()
-; 		StartVectorDrawing(CanvasVectorOutput(Canvas))
-; 		AddPathBox(0, 0, VectorOutputWidth(), VectorOutputHeight())
-; 		VectorSourceColor(WindowColor)
-; 		FillPath()
-; 		UITK::AddPathRoundedBox(0, 0, VectorOutputWidth(), VectorOutputHeight(), 5)
-; 		VectorSourceColor(GadgetColor)
-; 		FillPath()
-; 		StopVectorDrawing()
+	Procedure Handler_WindowResize()
+  		CanvasHeight = WindowHeight(Window) - 30 - 2 * MainWindow::#Window_Margin
+  		CanvasWidth = WindowWidth(Window) - 2 * MainWindow::#Window_Margin
+  		Redraw()
+  		SetWindowPos_(GadgetID(Container), 0, 0, 0, CanvasWidth, CanvasHeight, #SWP_NOMOVE | #SWP_NOZORDER)
 	EndProcedure
 	
-	DataSection
-		_CornerTL:
-		IncludeBinary "../Media/Corner-TL.png"
+	Procedure Redraw()
 		
-		_CornerTR:
-		IncludeBinary "../Media/Corner-TR.png"
+		; Fill the background
+		StartVectorDrawing(CanvasVectorOutput(Canvas))
+		AddPathBox(0, 0, CanvasWidth, CanvasHeight)
+		VectorSourceColor(GadgetColor)
+		FillPath(#PB_Path_Preserve)
 		
-		_CornerDL:
-		IncludeBinary "../Media/Corner-DL.png"
+		; Draw the preview
+		If CurrentImage
+			MovePathCursor((CanvasWidth - DisplayedWidth) * 0.5, (CanvasHeight - DisplayedHeight) * 0.5)
+			DrawVectorImage(ImageID(PreviewImage))
+		EndIf
 		
-		_CornerDR:
-		IncludeBinary "../Media/Corner-DR.png"
-	EndDataSection
+		; Draw the corners.
+		UITK::AddPathRoundedBox(0, 0, CanvasWidth, CanvasHeight, 5)
+		VectorSourceColor(WindowColor)
+		FillPath()
+		
+		StopVectorDrawing()
+	EndProcedure
 		
 EndModule
-; IDE Options = PureBasic 6.00 Beta 7 (Windows - x64)
-; CursorPosition = 82
-; FirstLine = 12
-; Folding = t--
+; IDE Options = PureBasic 6.00 Beta 8 (Windows - x64)
+; CursorPosition = 12
+; Folding = tB+
 ; EnableXP
+; DPIAware
