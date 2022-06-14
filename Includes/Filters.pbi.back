@@ -9,7 +9,7 @@ DeclareModule Filter
 	Declare BlackAndWhite(	SourceImage, Red, Green, Blue, Mask = 0)
 	Declare BoxBlur(		SourceImage, Horizontal_Scale.q, Vertical_Scale.q, Pass = 1, Seamless = 0, Mask = 0)
 	Declare Brightness(		SourceImage, Red, Green, Blue, Mask = 0)
-	Declare Color(			SourceImage, Color_option, Color_seuil, Mask = 0) ; Not sure I'm getting it.
+	Declare Color(			SourceImage, Color_option, Color_seuil, Mask = 0)
 	Declare Color_Effect(	SourceImage, color_effect_option, Mask = 0)
 	Declare Contrast(		SourceImage, Red, Green, Blue, Mask = 0)
 	Declare Emboss(			SourceImage, Emboss_power, Emboss_light, Emboss_opt, Mask = 0)
@@ -22,6 +22,34 @@ EndDeclareModule
 Module Filter
 	EnableExplicit
 	;Macro
+	Macro InitFilter()
+		If SourceImage = 0 : ProcedureReturn : EndIf
+		Protected i, OutputImage = SourceImage, InputBuffer, OutputBuffer, MaskBuffer, ThreadCount
+		SourceImage = CopyImage(SourceImage, #PB_Any)
+		
+		StartDrawing(ImageOutput(SourceImage))
+		InputBuffer = DrawingBuffer()
+		StopDrawing()
+		
+		StartDrawing(ImageOutput(OutputImage))
+		OutputBuffer = DrawingBuffer()
+		StopDrawing()
+		
+		ThreadCount = CountCPUs(#PB_System_CPUs)
+		If ThreadCount < 2 : ThreadCount = 1 : EndIf ;? Can CountCPUs() report less than 1 cpu?
+		Protected Dim tr.q(ThreadCount)
+		
+		If Mask <> 0
+			StartDrawing(ImageOutput(Mask))
+			MaskBuffer = DrawingBuffer()
+			StopDrawing()
+		EndIf
+		
+		param(0) = InputBuffer
+		param(1) = OutputBuffer
+		param(2) = MaskBuffer
+	EndMacro
+	
 	Macro Emboss_grayscale_macro()
 		! PMULLd xmm0, xmm4 ;rgb = (r * $55 + g * $55 + b * $55) ;grayscale
 		! pshufd xmm1, xmm0, 1 ;xmm1 = g * $55
@@ -64,7 +92,6 @@ Module Filter
 	;Private variables declaration
 	Global Dim param(256)
 	
-	
 	;Private procedure declarations
 	Declare Balance_thread(i)
 	Declare Bend_thread(i)
@@ -92,101 +119,43 @@ Module Filter
 	
 	
 	;Public procedure
-	Procedure Balance(SourceImage,Red, Green, Blue, Mask = 0)
+	Procedure Balance(SourceImage, Red, Green, Blue, Mask = 0)
+		InitFilter()
 		
-		If SourceImage = 0 : ProcedureReturn : EndIf
-		Protected Temp = SourceImage, OutputImage
-		SourceImage = CopyImage(SourceImage, #PB_Any)
-		OutputImage = Temp
-		Protected thread, Psource, Pcible, Pmask, lg, ht, i
-		
-		thread = CountCPUs(#PB_System_CPUs)
-		If thread < 2 : thread = 1 : EndIf
-		
-		Protected Dim tr.q(thread)
-		
-		StartDrawing(ImageOutput(SourceImage))
-		Psource = DrawingBuffer()
-		lg = ImageWidth(SourceImage)
-		ht = ImageHeight(SourceImage) 
-		StopDrawing()
-		
-		StartDrawing(ImageOutput(OutputImage))
-		Pcible = DrawingBuffer()
-		StopDrawing()
-		
-		If Mask < > 0
-			StartDrawing(ImageOutput(Mask))
-			Pmask = DrawingBuffer()
-			StopDrawing()
-		EndIf
-		
-		param(0) = Psource
-		param(1) = Pcible
-		param(2) = Pmask
-		param(3) = lg
-		param(4) = ht
-		param(5) = thread
+		param(3) = ImageWidth(SourceImage)
+		param(4) = ImageHeight(SourceImage) 
+		param(5) = ThreadCount
 		param(6) = ( Red << 32 ) + ( Green << 16 ) + Blue
 		
-		For i = 0 To thread - 1 : tr(i) = 0 : Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			While tr(i) = 0 
 				tr(i) = CreateThread(@Balance_thread(), i)
 			Wend
 		Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			If IsThread(tr(i)) > 0 : WaitThread(tr(i)) : EndIf 
 		Next
-		
-		FreeArray(tr())
 		
 		FreeImage(SourceImage)
 	EndProcedure
 	
-	Procedure Bend(SourceImage,Red, Green, Blue, Mask = 0)
+	Procedure Bend(SourceImage, Red, Green, Blue, Mask = 0)
+		Protected r1.f, g1.f, b1.f
 		
-		If SourceImage = 0 : ProcedureReturn : EndIf
-		Protected Temp = SourceImage, OutputImage
-		SourceImage = CopyImage(SourceImage, #PB_Any)
-		OutputImage = Temp
-		Protected thread, Psource, Pcible, Pmask, lg, ht, i, r1.f, g1.f, b1.f
+		InitFilter()
 		
-		thread = CountCPUs(#PB_System_CPUs)
-		If thread < 2 : thread = 1 : EndIf
+		Red - 180
+		Green - 180
+		Blue - 180
 		
-		Protected Dim tr.q(thread)
-		
-		StartDrawing(ImageOutput(SourceImage))
-		Psource = DrawingBuffer()
-		lg = ImageWidth(SourceImage)
-		ht = ImageHeight(SourceImage) 
-		StopDrawing()
-		
-		StartDrawing(ImageOutput(OutputImage))
-		Pcible = DrawingBuffer()
-		StopDrawing()
-		
-		If Mask < > 0
-			StartDrawing(ImageOutput(Mask))
-			Pmask = DrawingBuffer()
-			StopDrawing()
-		EndIf
-		
-		Red = Red - 180
-		Green = Green - 180
-		Blue = Blue - 180
-		
-		r1 = Red / 255.0 * 3.14 / 180.0
-		g1 = Green / 255.0 * 3.14 / 180.0
-		b1 = Blue / 255.0 * 3.14 / 180.0
+		r1 = Red / 255.0 * #PI / 180.0
+		g1 = Green / 255.0 * #PI / 180.0
+		b1 = Blue / 255.0 * #PI / 180.0
 		
 		Protected Dim tabr.q(255)
 		Protected Dim tabg.q(255)
 		Protected Dim tabb.q(255)
-		Protected palr = @tabr()
-		Protected palg = @tabg()
-		Protected palb = @tabb()
+		
 		For i = 0 To 255
 			tabr(i) = Sin(i * r1) * 127 + i
 			tabg(i) = Sin(i * g1) * 127 + i
@@ -199,115 +168,62 @@ Module Filter
 			If tabb(i) > 255 : tabb(i) = 255 : EndIf
 		Next
 		
-		param(0) = Psource ;00
-		param(1) = Pcible  ;08
-		param(2) = Pmask   ;16
-		param(3) = lg	   ;24
-		param(4) = ht	   ;32
-		param(5) = thread  ;40
+		param(3) = ImageWidth(SourceImage)	   ;24
+		param(4) = ImageHeight(SourceImage)	   ;32
+		param(5) = ThreadCount  ;40
 		param(6) = @tabr() ;48
 		param(7) = @tabg() ;56
 		param(8) = @tabb() ;64
 		
-		For i = 0 To thread - 1 : tr(i) = 0 : Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			While tr(i) = 0 
 				tr(i) = CreateThread(@Bend_thread(), i)
 			Wend
 		Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			If IsThread(tr(i)) > 0 : WaitThread(tr(i)) : EndIf 
 		Next
-		
-		FreeArray(tr())
-		FreeArray(tabr())
-		FreeArray(tabg())
-		FreeArray(tabb())
 		
 		FreeImage(SourceImage)
 	EndProcedure
 	
-	Procedure BlackAndWhite(SourceImage,Red, Green, Blue, Mask = 0)
+	Procedure BlackAndWhite(SourceImage, Red, Green, Blue, Mask = 0)
+		InitFilter()
 		
-		If SourceImage = 0 : ProcedureReturn : EndIf
-		Protected Temp = SourceImage, OutputImage
-		SourceImage = CopyImage(SourceImage, #PB_Any)
-		OutputImage = Temp
-		Protected thread, Psource, Pcible, Pmask, lg, ht, i
-		
-		thread = CountCPUs(#PB_System_CPUs)
-		If thread < 2 : thread = 1 : EndIf
-		
-		Protected Dim tr.q(thread)
-		
-		StartDrawing(ImageOutput(SourceImage))
-		Psource = DrawingBuffer()
-		lg = ImageWidth(SourceImage)
-		ht = ImageHeight(SourceImage) 
-		StopDrawing()
-		
-		StartDrawing(ImageOutput(OutputImage))
-		Pcible = DrawingBuffer()
-		StopDrawing()
-		
-		If Mask < > 0
-			StartDrawing(ImageOutput(Mask))
-			Pmask = DrawingBuffer()
-			StopDrawing()
-		EndIf
-		
-		param(0) = Psource
-		param(1) = Pcible
-		param(2) = Pmask
-		param(3) = lg
-		param(4) = ht
-		param(5) = thread
+		param(3) = ImageWidth(SourceImage)
+		param(4) = ImageHeight(SourceImage) 
+		param(5) = ThreadCount
 		param(6) = ( Red << 16 ) + ( Green << 8 ) + Blue
 		
-		For i = 0 To thread - 1 : tr(i) = 0 : Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			While tr(i) = 0 
 				tr(i) = CreateThread(@BlackAndWhite_thread(), i)
 			Wend
 		Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			If IsThread(tr(i)) > 0 : WaitThread(tr(i)) : EndIf 
 		Next
-		
-		FreeArray(tr())
 		
 		FreeImage(SourceImage)
 	EndProcedure
 	
-	Procedure BoxBlur(SourceImage,Horizontal_Scale.q, Vertical_Scale.q, Pass = 1, Seamless = 0, Mask = 0)
+	Procedure BoxBlur(SourceImage, Horizontal_Scale.q, Vertical_Scale.q, Pass = 1, Seamless = 0, Mask = 0)
+		Protected ii, e, nrx, nry, dx, dy, dij, ImageWidth, ImageHeight, taille, tempo, s, k
+		
+		InitFilter()
+		
 		If Horizontal_Scale = 0 And Vertical_Scale = 0 : ProcedureReturn : EndIf
-		If SourceImage = 0 : ProcedureReturn : EndIf
-		Protected Temp = SourceImage, OutputImage
-		SourceImage = CopyImage(SourceImage, #PB_Any)
-		OutputImage = Temp
 		If Pass < 1 : Pass = 1 : EndIf
 		
-		Protected i, ii, e, nrx, nry, dx, dy, dij, lg, ht, taille, pcible, psource, tempo, thread, s, k
-		
-		thread = CountCPUs(#PB_System_CPUs)
-		If thread < 2 : thread = 1 : EndIf
-		Protected Dim tr.q(thread)
-		
-		StartDrawing(ImageOutput(SourceImage))
-		psource = DrawingBuffer()
-		lg = ImageWidth(SourceImage)
-		ht = ImageHeight(SourceImage)
-		taille = lg * ht * 4
+		ImageWidth = ImageWidth(SourceImage)
+		ImageHeight = ImageHeight(SourceImage)
+		taille = ImageWidth * ImageHeight * 4
 		tempo = AllocateMemory(taille)
-		StopDrawing()
 		
-		StartDrawing(ImageOutput(OutputImage))
-		pcible = DrawingBuffer()
-		StopDrawing()
-		CopyMemory(psource, pcible, taille)
+		CopyMemory(InputBuffer, OutputBuffer, taille)
 		
-		dx = lg - 1
-		dy = ht - 1
+		dx = ImageWidth - 1
+		dy = ImageHeight - 1
 		If Horizontal_Scale > dx : Horizontal_Scale = dx : EndIf
 		If Vertical_Scale > dy : Vertical_Scale = dy : EndIf
 		
@@ -325,36 +241,28 @@ Module Filter
 			For i = 0 To dy + 2 * nry : ii = i - 1 - nry / 2 : If ii < 0 : ii = 0 : ElseIf ii > dy : ii = dy : EndIf : ly(i) = ii : Next
 		EndIf 
 		
-		param(0) = psource
-		param(1) = pcible
 		param(2) = tempo
-		param(3) = lg
-		param(4) = ht
+		param(3) = ImageWidth
+		param(4) = ImageHeight
 		param(5) = nrx
 		param(6) = nry
 		param(7) = lx()
 		param(8) = ly()
-		param(9) = thread
+		param(9) = ThreadCount
 		param(10) = dij
 		
 		For k = 1 To Pass
-			For i = 0 To thread - 1 : tr(i) = 0 : Next
-			For i = 0 To thread - 1 : While tr(i) = 0 : tr(i) = CreateThread(@BoxBlur_sp1(), i) : Wend : Next
-			For i = 0 To thread - 1 : If IsThread(tr(i)) > 0 : WaitThread(tr(i)) : EndIf : Next
-			CopyMemory(tempo, pcible, taille)
+			For i = 0 To ThreadCount - 1 : While tr(i) = 0 : tr(i) = CreateThread(@BoxBlur_sp1(), i) : Wend : Next
+			For i = 0 To ThreadCount - 1 : If IsThread(tr(i)) > 0 : WaitThread(tr(i)) : EndIf : Next
+			CopyMemory(tempo, OutputBuffer, taille)
 		Next
 		
-		CopyMemory(tempo, pcible, taille)
+		CopyMemory(tempo, OutputBuffer, taille)
 		
-		If Mask < > 0
+		If Mask <> 0
 			Protected Dim Reg_memory.q(5 * 8)
 			
-			StartDrawing(ImageOutput(Mask))
-			Protected pmask = DrawingBuffer()
-			lg = ImageWidth(SourceImage)
-			ht = ImageHeight(SourceImage)
-			Protected taillex = lg * ht
-			StopDrawing()
+			Protected taillex = ImageWidth * ImageHeight
 			
 			s = @reg_memory() ;calcul du mask
 			! mov rax, [p.v_s]
@@ -388,227 +296,103 @@ Module Filter
 			! mov r12, [rax + 016]
 			! mov rcx, [rax + 024]
 			
-			FreeArray(Reg_memory())
-			
 		EndIf
 		
 		FreeMemory(tempo)
-		FreeArray(tr())
-		FreeArray(lx())
-		FreeArray(ly())
 		
 		FreeImage(SourceImage)
 	EndProcedure
 	
-	Procedure Brightness(SourceImage,Red, Green, Blue, Mask = 0)
-		
-		If SourceImage = 0 : ProcedureReturn : EndIf
-		Protected Temp = SourceImage, OutputImage
-		SourceImage = CopyImage(SourceImage, #PB_Any)
-		OutputImage = Temp
-		Protected thread, Psource, Pcible, Pmask, lg, ht, i
-		
-		thread = CountCPUs(#PB_System_CPUs)
-		If thread < 2 : thread = 1 : EndIf
-		
-		Protected Dim tr.q(thread)
-		
-		StartDrawing(ImageOutput(SourceImage))
-		Psource = DrawingBuffer()
-		lg = ImageWidth(SourceImage)
-		ht = ImageHeight(SourceImage) 
-		StopDrawing()
-		
-		StartDrawing(ImageOutput(OutputImage))
-		Pcible = DrawingBuffer()
-		StopDrawing()
-		
-		If Mask < > 0
-			StartDrawing(ImageOutput(Mask))
-			Pmask = DrawingBuffer()
-			StopDrawing()
-		EndIf
+	Procedure Brightness(SourceImage, Red, Green, Blue, Mask = 0)
+		InitFilter()
 		
 		Red = Red - 255
 		Green = Green - 255
 		Blue = Blue - 255
-		param(0) = Psource
-		param(1) = Pcible
-		param(2) = Pmask
-		param(3) = lg
-		param(4) = ht
-		param(5) = thread
+		param(3) = ImageWidth(SourceImage)
+		param(4) = ImageHeight(SourceImage) 
+		param(5) = ThreadCount
 		param(6) = Red << 32 + Green << 16 + Blue
 		
-		For i = 0 To thread - 1 : tr(i) = 0 : Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1 : tr(i) = 0 : Next
+		For i = 0 To ThreadCount - 1
 			While tr(i) = 0 
 				tr(i) = CreateThread(@Brightness_thread(), i)
 			Wend
 		Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			If IsThread(tr(i)) > 0 : WaitThread(tr(i)) : EndIf 
 		Next
-		
-		FreeArray(tr())
 		
 		FreeImage(SourceImage)
 	EndProcedure
 	
-	Procedure Color(SourceImage,Color_option, Color_seuil, Mask = 0)
+	Procedure Color(SourceImage, Color_option, Color_seuil, Mask = 0)
+		InitFilter()
 		
-		If SourceImage = 0 : ProcedureReturn : EndIf
-		Protected Temp = SourceImage, OutputImage
-		SourceImage = CopyImage(SourceImage, #PB_Any)
-		OutputImage = Temp
 		If Color_option < 0 : Color_option = 0 : EndIf
 		If Color_option > 11 : Color_option = 11 : EndIf
 		If Color_seuil < 0 : Color_seuil = 0 : EndIf
 		If Color_seuil > 255 : Color_seuil = 255 : EndIf
 		
-		Protected thread, Psource, Pcible, Pmask, lg, ht, opt, i
-		thread = CountCPUs(#PB_System_CPUs)
-		If thread < 2 : thread = 1 : EndIf
-		
-		Protected Dim tr.q(thread)
-		
-		StartDrawing(ImageOutput(SourceImage))
-		Psource = DrawingBuffer()
-		lg = ImageWidth(SourceImage)
-		ht = ImageHeight(SourceImage) 
-		StopDrawing()
-		
-		StartDrawing(ImageOutput(OutputImage))
-		Pcible = DrawingBuffer()
-		StopDrawing()
-		
-		If Mask < > 0
-			StartDrawing(ImageOutput(Mask))
-			Pmask = DrawingBuffer()
-			StopDrawing()
-		EndIf
-		
-		param(0) = Psource
-		param(1) = Pcible
-		param(2) = Pmask
-		param(3) = lg
-		param(4) = ht
-		param(5) = thread
+		param(3) = ImageWidth(SourceImage)
+		param(4) = ImageHeight(SourceImage)
+		param(5) = ThreadCount
 		param(6) = Color_option
 		param(7) = Color_seuil
 		
-		For i = 0 To thread - 1 : tr(i) = 0 : Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1 : tr(i) = 0 : Next
+		For i = 0 To ThreadCount - 1
 			While tr(i) = 0 
 				tr(i) = CreateThread(@Color_thread(), i)
 			Wend
 		Next
 		
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			If IsThread(tr(i)) > 0 : WaitThread(tr(i)) : EndIf 
 		Next
-		FreeArray(tr())
 		
 		FreeImage(SourceImage)
 	EndProcedure
 	
-	Procedure Color_Effect(SourceImage,color_effect_option, Mask = 0)
+	Procedure Color_Effect(SourceImage, color_effect_option, Mask = 0)
+		InitFilter()
 		
-		If SourceImage = 0 : ProcedureReturn : EndIf
-		Protected Temp = SourceImage, OutputImage
-		SourceImage = CopyImage(SourceImage, #PB_Any)
-		OutputImage = Temp
 		If color_effect_option < 0 : color_effect_option = 0 : EndIf
 		If color_effect_option > 4 : color_effect_option = 4 : EndIf
-		Protected thread, Psource, Pcible, Pmask, lg, ht, opt, i
 		
-		thread = CountCPUs(#PB_System_CPUs)
-		If thread < 2 : thread = 1 : EndIf
-		
-		Protected Dim tr.q(thread)
-		
-		StartDrawing(ImageOutput(SourceImage))
-		Psource = DrawingBuffer()
-		lg = ImageWidth(SourceImage)
-		ht = ImageHeight(SourceImage) 
-		StopDrawing()
-		
-		StartDrawing(ImageOutput(OutputImage))
-		Pcible = DrawingBuffer()
-		StopDrawing()
-		
-		If Mask < > 0
-			StartDrawing(ImageOutput(Mask))
-			Pmask = DrawingBuffer()
-			StopDrawing()
-		EndIf
-		
-		param(0) = Psource
-		param(1) = Pcible
-		param(2) = Pmask
-		param(3) = lg
-		param(4) = ht
-		param(5) = thread
+		param(3) = ImageWidth(SourceImage)
+		param(4) = ImageHeight(SourceImage) 
+		param(5) = ThreadCount
 		param(6) = color_effect_option
 		
-		For i = 0 To thread - 1 : tr(i) = 0 : Next
+		For i = 0 To ThreadCount - 1 : tr(i) = 0 : Next
 		
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			While tr(i) = 0 
 				tr(i) = CreateThread(@color_effect_thread(), i)
 			Wend
 		Next
 		
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			If IsThread(tr(i)) > 0 : WaitThread(tr(i)) : EndIf 
 		Next
-		
-		FreeArray(tr())
 		
 		FreeImage(SourceImage)
 	EndProcedure
 	
-	Procedure Contrast(SourceImage,Red, Green, Blue, Mask = 0)
+	Procedure Contrast(SourceImage, Red, Green, Blue, Mask = 0)
+		InitFilter()
 		
-		If SourceImage = 0 : ProcedureReturn : EndIf
-		Protected Temp = SourceImage, OutputImage
-		SourceImage = CopyImage(SourceImage, #PB_Any)
-		OutputImage = Temp
-		Protected thread, Psource, Pcible, Pmask, lg, ht, i ;
-		
-		thread = CountCPUs(#PB_System_CPUs)
-		If thread < 2 : thread = 1 : EndIf
-		Protected Dim tr.q(thread)
-		
-		StartDrawing(ImageOutput(SourceImage))
-		Psource = DrawingBuffer()
-		lg = ImageWidth(SourceImage)
-		ht = ImageHeight(SourceImage) 
-		StopDrawing()
-		
-		StartDrawing(ImageOutput(OutputImage))
-		Pcible = DrawingBuffer()
-		StopDrawing()
-		
-		If Mask < > 0
-			StartDrawing(ImageOutput(Mask))
-			Pmask = DrawingBuffer()
-			StopDrawing()
-		EndIf
-		
-		param(0) = Psource ;00
-		param(1) = Pcible  ;08
-		param(2) = Pmask   ;16
-		param(3) = lg	   ;24
-		param(4) = ht	   ;32
-		param(5) = thread  ;40
+		param(3) = ImageWidth(SourceImage)	   ;24
+		param(4) = ImageHeight(SourceImage) 	   ;32
+		param(5) = ThreadCount  ;40
 		param(6) = Red - 256
 		param(7) = Green - 256
 		param(8) = Blue - 256
 		
-		
-		For i = 0 To thread - 1 : tr(i) = 0 : Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1 : tr(i) = 0 : Next
+		For i = 0 To ThreadCount - 1
 			While tr(i) = 0 
 				If Mask = 0
 					tr(i) = CreateThread(@Contrast_thread(), i)
@@ -617,53 +401,33 @@ Module Filter
 				EndIf 
 			Wend
 		Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			If IsThread(tr(i)) > 0 : WaitThread(tr(i)) : EndIf 
 		Next
-		
-		FreeArray(tr())
 		
 		FreeImage(SourceImage)
 	EndProcedure
 	
-	Procedure Emboss(SourceImage,Emboss_power, Emboss_light, Emboss_opt, Mask = 0)
-		If SourceImage = 0: ProcedureReturn : EndIf
-		Protected Temp = SourceImage, OutputImage
-		SourceImage = CopyImage(SourceImage, #PB_Any)
-		OutputImage = Temp
-		Protected thread, Psource, Pcible, Pmask, lg, ht, i, nx1, ny1, nx2, ny2, nx3, ny3, nx4, ny4, nx5, ny5, nx6, ny6, px1, px2, px3, px4, px5, px6, py1, py2, py3, py4, py5, py6, s, taille
-		thread = CountCPUs(#PB_System_CPUs)
-		If thread < 2 : thread = 1 : EndIf
-		Protected Dim tr.q(thread)
+	Procedure Emboss(SourceImage, Emboss_power, Emboss_light, Emboss_opt, Mask = 0)
+		Protected ImageWidth, ImageHeight, nx1, ny1, nx2, ny2, nx3, ny3, nx4, ny4, nx5, ny5, nx6, ny6, px1, px2, px3, px4, px5, px6, py1, py2, py3, py4, py5, py6, s, taille
 		
-		StartDrawing(ImageOutput(SourceImage))
-		Psource = DrawingBuffer()
-		lg = ImageWidth(SourceImage)
-		ht = ImageHeight(SourceImage) 
-		StopDrawing()
+		InitFilter()
 		
-		StartDrawing(ImageOutput(OutputImage))
-		Pcible = DrawingBuffer()
-		StopDrawing()
+		ImageWidth = ImageWidth(SourceImage)
+		ImageHeight = ImageHeight(SourceImage)
 		
-		If Mask < > 0
-			StartDrawing(ImageOutput(Mask))
-			Pmask = DrawingBuffer()
-			StopDrawing()
-		EndIf
-		
-		Protected Dim tx1.l(lg + 3)
-		Protected Dim ty1.l(ht + 3)
-		Protected Dim tx2.l(lg + 3)
-		Protected Dim ty2.l(ht + 3)
-		Protected Dim tx3.l(lg + 3)
-		Protected Dim ty3.l(ht + 3)
-		Protected Dim tx4.l(lg + 3)
-		Protected Dim ty4.l(ht + 3)
-		Protected Dim tx5.l(lg + 3)
-		Protected Dim ty5.l(ht + 3)
-		Protected Dim tx6.l(lg + 3)
-		Protected Dim ty6.l(ht + 3)
+		Protected Dim tx1.l(ImageWidth + 3)
+		Protected Dim ty1.l(ImageHeight + 3)
+		Protected Dim tx2.l(ImageWidth + 3)
+		Protected Dim ty2.l(ImageHeight + 3)
+		Protected Dim tx3.l(ImageWidth + 3)
+		Protected Dim ty3.l(ImageHeight + 3)
+		Protected Dim tx4.l(ImageWidth + 3)
+		Protected Dim ty4.l(ImageHeight + 3)
+		Protected Dim tx5.l(ImageWidth + 3)
+		Protected Dim ty5.l(ImageHeight + 3)
+		Protected Dim tx6.l(ImageWidth + 3)
+		Protected Dim ty6.l(ImageHeight + 3)
 		
 		;coordonnees de chaque pixel pour le precalcul de position
 		Select Emboss_opt
@@ -725,30 +489,27 @@ Module Filter
 		
 		;precalcul des pixel en "x" et en "y"
 		;permet supprimer les tests de depassement de chaque pixel hors "ecran"
-		For i = 0 To lg - 1 
-			px1 = i + nx1 : If px1 < 0 : px1 = 0 : EndIf : If px1 > ( lg - 1 ) : px1 = lg - 1 : EndIf : tx1(i) = px1 * 4
-			px2 = i + nx2 : If px2 < 0 : px2 = 0 : EndIf : If px2 > ( lg - 1 ) : px2 = lg - 1 : EndIf : tx2(i) = px2 * 4
-			px3 = i + nx3 : If px3 < 0 : px3 = 0 : EndIf : If px3 > ( lg - 1 ) : px3 = lg - 1 : EndIf : tx3(i) = px3 * 4
-			px4 = i + nx4 : If px4 < 0 : px4 = 0 : EndIf : If px4 > ( lg - 1 ) : px4 = lg - 1 : EndIf : tx4(i) = px4 * 4
-			px5 = i + nx5 : If px5 < 0 : px5 = 0 : EndIf : If px5 > ( lg - 1 ) : px5 = lg - 1 : EndIf : tx5(i) = px5 * 4
-			px6 = i + nx6 : If px6 < 0 : px6 = 0 : EndIf : If px6 > ( lg - 1 ) : px6 = lg - 1 : EndIf : tx6(i) = px6 * 4
+		For i = 0 To ImageWidth - 1 
+			px1 = i + nx1 : If px1 < 0 : px1 = 0 : EndIf : If px1 > ( ImageWidth - 1 ) : px1 = ImageWidth - 1 : EndIf : tx1(i) = px1 * 4
+			px2 = i + nx2 : If px2 < 0 : px2 = 0 : EndIf : If px2 > ( ImageWidth - 1 ) : px2 = ImageWidth - 1 : EndIf : tx2(i) = px2 * 4
+			px3 = i + nx3 : If px3 < 0 : px3 = 0 : EndIf : If px3 > ( ImageWidth - 1 ) : px3 = ImageWidth - 1 : EndIf : tx3(i) = px3 * 4
+			px4 = i + nx4 : If px4 < 0 : px4 = 0 : EndIf : If px4 > ( ImageWidth - 1 ) : px4 = ImageWidth - 1 : EndIf : tx4(i) = px4 * 4
+			px5 = i + nx5 : If px5 < 0 : px5 = 0 : EndIf : If px5 > ( ImageWidth - 1 ) : px5 = ImageWidth - 1 : EndIf : tx5(i) = px5 * 4
+			px6 = i + nx6 : If px6 < 0 : px6 = 0 : EndIf : If px6 > ( ImageWidth - 1 ) : px6 = ImageWidth - 1 : EndIf : tx6(i) = px6 * 4
 		Next
 		
-		For i = 0 To ht + 1
-			py1 = i + ny1 : If py1 < 0 : py1 = 0 : EndIf : If py1 > ( ht - 1 ) : py1 = ht - 1 : EndIf : ty1(i) = py1
-			py2 = i + ny2 : If py2 < 0 : py2 = 0 : EndIf : If py2 > ( ht - 1 ) : py2 = ht - 1 : EndIf : ty2(i) = py2
-			py3 = i + ny3 : If py3 < 0 : py3 = 0 : EndIf : If py3 > ( ht - 1 ) : py3 = ht - 1 : EndIf : ty3(i) = py3
-			py4 = i + ny4 : If py4 < 0 : py4 = 0 : EndIf : If py4 > ( ht - 1 ) : py4 = ht - 1 : EndIf : ty4(i) = py4
-			py5 = i + ny5 : If py5 < 0 : py5 = 0 : EndIf : If py5 > ( ht - 1 ) : py5 = ht - 1 : EndIf : ty5(i) = py4
-			py6 = i + ny6 : If py6 < 0 : py6 = 0 : EndIf : If py6 > ( ht - 1 ) : py6 = ht - 1 : EndIf : ty6(i) = py4
+		For i = 0 To ImageHeight + 1
+			py1 = i + ny1 : If py1 < 0 : py1 = 0 : EndIf : If py1 > ( ImageHeight - 1 ) : py1 = ImageHeight - 1 : EndIf : ty1(i) = py1
+			py2 = i + ny2 : If py2 < 0 : py2 = 0 : EndIf : If py2 > ( ImageHeight - 1 ) : py2 = ImageHeight - 1 : EndIf : ty2(i) = py2
+			py3 = i + ny3 : If py3 < 0 : py3 = 0 : EndIf : If py3 > ( ImageHeight - 1 ) : py3 = ImageHeight - 1 : EndIf : ty3(i) = py3
+			py4 = i + ny4 : If py4 < 0 : py4 = 0 : EndIf : If py4 > ( ImageHeight - 1 ) : py4 = ImageHeight - 1 : EndIf : ty4(i) = py4
+			py5 = i + ny5 : If py5 < 0 : py5 = 0 : EndIf : If py5 > ( ImageHeight - 1 ) : py5 = ImageHeight - 1 : EndIf : ty5(i) = py4
+			py6 = i + ny6 : If py6 < 0 : py6 = 0 : EndIf : If py6 > ( ImageHeight - 1 ) : py6 = ImageHeight - 1 : EndIf : ty6(i) = py4
 		Next 
 		
-		param(0) = Psource;00
-		param(1) = Pcible ;08
-		param(2) = Pmask  ;16 
-		param(3) = lg	  ;24
-		param(4) = ht	  ;32
-		param(5) = thread ;40
+		param(3) = ImageWidth	  ;24
+		param(4) = ImageHeight	  ;32
+		param(5) = ThreadCount ;40
 		param(6) = Emboss_power ;48
 		param(7) = Emboss_light	;56
 		param(8) = @tx1()		;64
@@ -764,45 +525,44 @@ Module Filter
 		param(18) = @tx6()		;144
 		param(19) = @ty6()		;152
 		
-		For i = 0 To thread - 1 : tr(i) = 0 : Next
+		For i = 0 To ThreadCount - 1 : tr(i) = 0 : Next
 		
 		Select Emboss_opt
 			Case 0 To 15
-				For i = 0 To thread - 1
+				For i = 0 To ThreadCount - 1
 					While tr(i) = 0 
 						tr(i) = CreateThread(@EmbossV1(), i)
 					Wend
 				Next
 			Case 16 To 27
-				For i = 0 To thread - 1
+				For i = 0 To ThreadCount - 1
 					While tr(i) = 0 
 						tr(i) = CreateThread(@EmbossV2(), i)
 					Wend
 				Next
 			Case 28, 29
-				For i = 0 To thread - 1
+				For i = 0 To ThreadCount - 1
 					While tr(i) = 0 
 						tr(i) = CreateThread(@EmbossV3(), i)
 					Wend
 				Next
 			Case 30 To 33
-				For i = 0 To thread - 1
+				For i = 0 To ThreadCount - 1
 					While tr(i) = 0 
 						tr(i) = CreateThread(@EmbossV4(), i)
 					Wend
 				Next
 			Case 34
-				For i = 0 To thread - 1
+				For i = 0 To ThreadCount - 1
 					While tr(i) = 0 
 						tr(i) = CreateThread(@EmbossV5(), i)
 					Wend
 				Next 
 		EndSelect
 		
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			If IsThread(tr(i)) > 0 : WaitThread(tr(i)) : EndIf 
 		Next
-		
 		
 		FreeArray(tr())
 		
@@ -813,9 +573,9 @@ Module Filter
 		! mov [rax + 008], r11
 		! mov [rax + 016], r12
 		
-		If Mask < > 0
+		If Mask <> 0
 			
-			taille = lg * ht
+			taille = ImageWidth * ImageHeight
 			! mov rcx, [p.v_Pmask]
 			! mov r8, [p.v_Psource]
 			! mov r9, [p.v_Pcible]
@@ -840,64 +600,20 @@ Module Filter
 			! mov r11, [rax + 008]
 			! mov r12, [rax + 016]
 			
-			FreeArray(Reg_memory())
-			
 		EndIf
-		
-		FreeArray(tx1())
-		FreeArray(ty1())
-		FreeArray(tx2())
-		FreeArray(ty2())
-		FreeArray(tx3())
-		FreeArray(ty3())
-		FreeArray(tx4())
-		FreeArray(ty4())
-		FreeArray(tx5())
-		FreeArray(ty5())
-		FreeArray(tx6())
-		FreeArray(ty6())
 		
 		FreeImage(SourceImage)
 	EndProcedure
 	
-	Procedure Prewitt(SourceImage,Prewitt_opt = 128, Mask = 0)
-		If SourceImage = 0 : ProcedureReturn : EndIf
-		Protected Temp = SourceImage, OutputImage
-		SourceImage = CopyImage(SourceImage, #PB_Any)
-		OutputImage = Temp
-		Protected thread, Psource, Pcible, Pmask, lg, ht, i
+	Procedure Prewitt(SourceImage, Prewitt_opt = 128, Mask = 0)
+		InitFilter()
 		
-		thread = CountCPUs(#PB_System_CPUs)
-		If thread < 2 : thread = 1 : EndIf
-		
-		Protected Dim tr.q(thread)
-		
-		StartDrawing(ImageOutput(SourceImage))
-		Psource = DrawingBuffer()
-		lg = ImageWidth(SourceImage)
-		ht = ImageHeight(SourceImage) 
-		StopDrawing()
-		
-		StartDrawing(ImageOutput(OutputImage))
-		Pcible = DrawingBuffer()
-		StopDrawing()
-		
-		If Mask < > 0
-			StartDrawing(ImageOutput(Mask))
-			Pmask = DrawingBuffer()
-			StopDrawing()
-		EndIf
-		
-		param(0) = Psource
-		param(1) = Pcible
-		param(2) = Pmask
-		param(3) = lg
-		param(4) = ht
-		param(5) = thread
+		param(3) = ImageWidth(SourceImage)
+		param(4) = ImageHeight(SourceImage) 
+		param(5) = ThreadCount
 		param(6) = Prewitt_opt
 		
-		For i = 0 To thread - 1 : tr(i) = 0 : Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			While tr(i) = 0 
 				If Mask = 0
 					tr(i) = CreateThread(@Prewitt_thread(), i)
@@ -906,54 +622,22 @@ Module Filter
 				EndIf
 			Wend
 		Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			If IsThread(tr(i)) > 0 : WaitThread(tr(i)) : EndIf 
 		Next
-		
-		FreeArray(tr())
 		
 		FreeImage(SourceImage)
 	EndProcedure
 	
-	Procedure Roberts(SourceImage,Roberts_opt = 128, Mask = 0)
+	Procedure Roberts(SourceImage, Roberts_opt = 128, Mask = 0)
+		InitFilter()
 		
-		If SourceImage = 0 : ProcedureReturn : EndIf
-		Protected Temp = SourceImage, OutputImage
-		SourceImage = CopyImage(SourceImage, #PB_Any)
-		OutputImage = Temp
-		Protected thread, Psource, Pcible, Pmask, lg, ht, i
-		
-		thread = CountCPUs(#PB_System_CPUs)
-		If thread < 2 : thread = 1 : EndIf
-		
-		Protected Dim tr.q(thread)
-		
-		StartDrawing(ImageOutput(SourceImage))
-		Psource = DrawingBuffer()
-		lg = ImageWidth(SourceImage)
-		ht = ImageHeight(SourceImage) 
-		StopDrawing()
-		
-		StartDrawing(ImageOutput(OutputImage))
-		Pcible = DrawingBuffer()
-		StopDrawing()
-		
-		If Mask < > 0
-			StartDrawing(ImageOutput(Mask))
-			Pmask = DrawingBuffer()
-			StopDrawing()
-		EndIf
-		
-		param(0) = Psource
-		param(1) = Pcible
-		param(2) = Pmask
-		param(3) = lg
-		param(4) = ht
-		param(5) = thread
+		param(3) = ImageWidth(SourceImage)
+		param(4) = ImageHeight(SourceImage) 
+		param(5) = ThreadCount
 		param(6) = Roberts_opt
 		
-		For i = 0 To thread - 1 : tr(i) = 0 : Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			While tr(i) = 0 
 				If Mask = 0
 					tr(i) = CreateThread(@Roberts_thread(), i)
@@ -962,54 +646,22 @@ Module Filter
 				EndIf
 			Wend
 		Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			If IsThread(tr(i)) > 0 : WaitThread(tr(i)) : EndIf 
 		Next
-		
-		FreeArray(tr())
 		
 		FreeImage(SourceImage)
 	EndProcedure
 	
-	Procedure Sobel(SourceImage,Sobel_opt = 128, Mask = 0)
+	Procedure Sobel(SourceImage, Sobel_opt = 128, Mask = 0)
+		InitFilter()
 		
-		If SourceImage = 0 : ProcedureReturn : EndIf
-		Protected Temp = SourceImage, OutputImage
-		SourceImage = CopyImage(SourceImage, #PB_Any)
-		OutputImage = Temp
-		Protected thread, Psource, Pcible, Pmask, lg, ht, i
-		
-		thread = CountCPUs(#PB_System_CPUs)
-		If thread < 2 : thread = 1 : EndIf
-		
-		Protected Dim tr.q(thread)
-		
-		StartDrawing(ImageOutput(SourceImage))
-		Psource = DrawingBuffer()
-		lg = ImageWidth(SourceImage)
-		ht = ImageHeight(SourceImage) 
-		StopDrawing()
-		
-		StartDrawing(ImageOutput(OutputImage))
-		Pcible = DrawingBuffer()
-		StopDrawing()
-		
-		If Mask < > 0
-			StartDrawing(ImageOutput(Mask))
-			Pmask = DrawingBuffer()
-			StopDrawing()
-		EndIf
-		
-		param(0) = Psource
-		param(1) = Pcible
-		param(2) = Pmask
-		param(3) = lg
-		param(4) = ht
-		param(5) = thread
+		param(3) = ImageWidth(SourceImage)
+		param(4) = ImageHeight(SourceImage) 
+		param(5) = ThreadCount
 		param(6) = Sobel_opt
 		
-		For i = 0 To thread - 1 : tr(i) = 0 : Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			While tr(i) = 0 
 				If Mask = 0
 					tr(i) = CreateThread(@Sobel_thread(), i)
@@ -1018,54 +670,22 @@ Module Filter
 				EndIf
 			Wend
 		Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			If IsThread(tr(i)) > 0 : WaitThread(tr(i)) : EndIf 
 		Next
-		
-		FreeArray(tr())
 		
 		FreeImage(SourceImage)
 	EndProcedure
 	
-	Procedure Tint(SourceImage,Tint_opt, Mask = 0)
+	Procedure Tint(SourceImage, Tint_opt, Mask = 0)
+		InitFilter()
 		
-		If SourceImage = 0 : ProcedureReturn : EndIf
-		Protected Temp = SourceImage, OutputImage
-		SourceImage = CopyImage(SourceImage, #PB_Any)
-		OutputImage = Temp
-		Protected thread, Psource, Pcible, Pmask, lg, ht, i
-		
-		thread = CountCPUs(#PB_System_CPUs)
-		If thread < 2 : thread = 1 : EndIf
-		
-		Protected Dim tr.q(thread)
-		
-		StartDrawing(ImageOutput(SourceImage))
-		Psource = DrawingBuffer()
-		lg = ImageWidth(SourceImage)
-		ht = ImageHeight(SourceImage) 
-		StopDrawing()
-		
-		StartDrawing(ImageOutput(OutputImage))
-		Pcible = DrawingBuffer()
-		StopDrawing()
-		
-		If Mask < > 0
-			StartDrawing(ImageOutput(Mask))
-			Pmask = DrawingBuffer()
-			StopDrawing()
-		EndIf
-		
-		param(0) = Psource
-		param(1) = Pcible
-		param(2) = Pmask
-		param(3) = lg
-		param(4) = ht
-		param(5) = thread
+		param(3) = ImageWidth(SourceImage)
+		param(4) = ImageHeight(SourceImage) 
+		param(5) = ThreadCount
 		param(6) = Tint_opt
 		
-		For i = 0 To thread - 1 : tr(i) = 0 : Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			While tr(i) = 0 
 				If Mask = 0
 					tr(i) = CreateThread(@Tint_thread(), i)
@@ -1074,11 +694,9 @@ Module Filter
 				EndIf
 			Wend
 		Next
-		For i = 0 To thread - 1
+		For i = 0 To ThreadCount - 1
 			If IsThread(tr(i)) > 0 : WaitThread(tr(i)) : EndIf 
 		Next
-		
-		FreeArray(tr())
 		
 		FreeImage(SourceImage)
 	EndProcedure
@@ -1208,7 +826,7 @@ Module Filter
 		! mov rdi, [rax + 08] ;cible
 		! mov r11, [rax + 16] ;mask
 		! mov r8, [rax + 48] ;palr
-		! mov r9, [rax + 56] ;palg
+		! mov r9, [rax + 56] ;paImageWidth
 		! mov r10, [rax + 64] ;palb
 		! mov rdx, [p.v_start]
 		! shl rdx, 2
@@ -1368,14 +986,14 @@ Module Filter
 	
 	Procedure BoxBlur_sp1(i)
 		
-		Protected p, d.f, start, stop, y, pos, ht
+		Protected p, d.f, start, stop, y, pos, ImageHeight
 		p = @param()
 		
 		d = 1 / param(10) ;dx
 		start = ( param(4) / param(9) ) * i
 		stop = ( param(4) / param(9) ) * (i + 1) - 1
 		If i = (param(9) - 1) ;ndt
-			If stop < ht : stop = param(4) - 1 : EndIf ;ht is always 0
+			If stop < ImageHeight : stop = param(4) - 1 : EndIf ;ImageHeight is always 0
 		EndIf 
 		
 		;d.f = 1 / dx
@@ -1399,14 +1017,14 @@ Module Filter
 			Next
 			
 			! mov rcx, [p.v_y]
-			! mov rax, [r9 + 24];[p.v_lg]
+			! mov rax, [r9 + 24];[p.v_ImageWidth]
 			! mul rcx
 			! shl rax, 2
 			! add rax, [r9 + 16];[p.v_tempo]
 			! mov rcx, rax
 			
 			! xor rdx, rdx
-			! BoxBlur_bouclex : ;For x = 0 To (lg - 1)
+			! BoxBlur_bouclex : ;For x = 0 To (ImageWidth - 1)
 			! mov eax, [r8 + rdx * 4] ;tx(x)
 			! add rax, [p.v_pos] ;pos + var * 4
 			! movd xmm0, [rax] ;PeekL(pos + var << 4)
@@ -1437,7 +1055,7 @@ Module Filter
 			! add rcx, 4
 			
 			! inc rdx
-			! cmp rdx, [r9 + 24];[p.v_lg]
+			! cmp rdx, [r9 + 24];[p.v_ImageWidth]
 			! jb BoxBlur_bouclex ;Next 
 			
 		Next 
@@ -3383,7 +3001,7 @@ Module Filter
 		! add r11, rax ;cible + start 
 		
 		! add r11, 4
-		! mov r15, [rcx + 3 * 8] ;lg
+		! mov r15, [rcx + 3 * 8] ;ImageWidth
 		! shl r15, 2
 		! pxor xmm0, xmm0
 		! mov eax, [rcx + 6 * 8] ;opt
@@ -3392,7 +3010,7 @@ Module Filter
 		! punpcklbw xmm15, xmm0
 		
 		! xor rax, rax
-		! mov eax, [rcx + 4 * 8] ;ht
+		! mov eax, [rcx + 4 * 8] ;ImageHeight
 		! mov r13, [p.v_start]
 		! prewitt_boucle_y : 
 		
@@ -3420,7 +3038,7 @@ Module Filter
 		! punpcklbw xmm8, xmm0
 		
 		! xor rax, rax
-		! mov eax, [rcx + 3 * 8] ;lg
+		! mov eax, [rcx + 3 * 8] ;ImageWidth
 		! mov r14, rax
 		! sub r14, 2
 		
@@ -3569,7 +3187,7 @@ Module Filter
 		! add r11, rax ;cible + start 
 		! add rbx, rax ;mask + start 
 		
-		! mov r15, [rcx + 3 * 8] ;lg
+		! mov r15, [rcx + 3 * 8] ;ImageWidth
 		! shl r15, 2
 		! pxor xmm0, xmm0
 		! mov eax, [rcx + 6 * 8] ;opt
@@ -3578,7 +3196,7 @@ Module Filter
 		! punpcklbw xmm15, xmm0
 		
 		! xor rax, rax
-		! mov eax, [rcx + 4 * 8] ;ht
+		! mov eax, [rcx + 4 * 8] ;ImageHeight
 		! mov r13, [p.v_start]
 		! prewitt_boucle_y2 : 
 		
@@ -3608,7 +3226,7 @@ Module Filter
 		! punpcklbw xmm8, xmm0
 		
 		! xor rax, rax
-		! mov eax, [rcx + 3 * 8] ;lg
+		! mov eax, [rcx + 3 * 8] ;ImageWidth
 		! mov r14, rax
 		! sub r14, 2
 		
@@ -3752,20 +3370,20 @@ Module Filter
 		! movd xmm5, eax
 		! punpcklbw xmm5, xmm0
 		
-		! mov eax, [ecx + 3 * 8] ;lg
+		! mov eax, [ecx + 3 * 8] ;ImageWidth
 		! mov r10, rax
-		! dec r10 ;r10 = lg - 1
+		! dec r10 ;r10 = ImageWidth - 1
 		
-		! mov eax, [p.v_stop];[ecx + 4 * 8] ;ht
+		! mov eax, [p.v_stop];[ecx + 4 * 8] ;ImageHeight
 		! mov r11, rax
 		
-		! mov r9, [p.v_start] ;ht
-		! mov eax, [ecx + 3 * 8] ;lg
+		! mov r9, [p.v_start] ;ImageHeight
+		! mov eax, [ecx + 3 * 8] ;ImageWidth
 		! mul r9
 		! shl rax, 2
 		! mov r9, rax
 		
-		! mov eax, [ecx + 3 * 8] ;lg
+		! mov eax, [ecx + 3 * 8] ;ImageWidth
 		! shl eax, 2
 		! mov rsi, [rcx + 00] ;source
 		! add rsi, r9
@@ -3774,7 +3392,7 @@ Module Filter
 		! mov rdx, [rcx + 1 * 8] ;cible
 		! add rdx, r9
 		
-		! mov r9, [p.v_start] ;ht
+		! mov r9, [p.v_start] ;ImageHeight
 		! robert_boucle_y : 
 		
 		! movd xmm1, [rsi]
@@ -3809,15 +3427,15 @@ Module Filter
 		! movq xmm3, xmm4
 		
 		! inc r8
-		! cmp r8, r10 ;cmp (lg - 1)
+		! cmp r8, r10 ;cmp (ImageWidth - 1)
 		! jb robert_boucle_x
-		! mov eax, [ecx + 3 * 8] ;lg
+		! mov eax, [ecx + 3 * 8] ;ImageWidth
 		! shl eax, 2
 		! add rdx, rax 
 		! add rsi, rax
 		! add rdi, rax
 		! inc r9
-		! cmp r9, r11 ;cmp (ht - 1) 
+		! cmp r9, r11 ;cmp (ImageHeight - 1) 
 		! jb robert_boucle_y 
 		
 		! mov rax, [p.v_s] ;restaurtion des registres
@@ -3887,17 +3505,17 @@ Module Filter
 		! movd xmm5, eax
 		! punpcklbw xmm5, xmm0
 		
-		! mov eax, [ecx + 3 * 8] ;lg
+		! mov eax, [ecx + 3 * 8] ;ImageWidth
 		! mov r10, rax
-		! dec r10 ;r10 = lg - 1
+		! dec r10 ;r10 = ImageWidth - 1
 		
-		! mov r9, [p.v_start] ;ht
-		! mov eax, [ecx + 3 * 8] ;lg
+		! mov r9, [p.v_start] ;ImageHeight
+		! mov eax, [ecx + 3 * 8] ;ImageWidth
 		! mul r9
 		! shl rax, 2
 		! mov r9, rax
 		
-		! mov eax, [ecx + 3 * 8] ;lg
+		! mov eax, [ecx + 3 * 8] ;ImageWidth
 		! shl eax, 2
 		! mov rsi, [rcx + 00] ;source
 		! add rsi, r9
@@ -3908,7 +3526,7 @@ Module Filter
 		! mov r11, [rcx + 2 * 8] ;mask
 		! add r11, r9
 		
-		! mov r9, [p.v_start] ;ht
+		! mov r9, [p.v_start] ;ImageHeight
 		! robert_boucle_y2 : 
 		
 		! movd xmm1, [rsi]
@@ -3951,9 +3569,9 @@ Module Filter
 		! movq xmm3, xmm4
 		
 		! inc r8
-		! cmp r8, r10 ;cmp (lg - 1)
+		! cmp r8, r10 ;cmp (ImageWidth - 1)
 		! jb robert_boucle_x2
-		! mov eax, [ecx + 3 * 8] ;lg
+		! mov eax, [ecx + 3 * 8] ;ImageWidth
 		! shl eax, 2
 		! add rdx, rax 
 		! add rsi, rax
@@ -3963,7 +3581,7 @@ Module Filter
 		! mov rax, [p.v_stop]
 		;! dec rax
 		! inc r9
-		! cmp r9, rax ;cmp (ht - 1) 
+		! cmp r9, rax ;cmp (ImageHeight - 1) 
 		! jb robert_boucle_y2 
 		
 		! mov rax, [p.v_s] ;restaurtion des registres
@@ -4046,7 +3664,7 @@ Module Filter
 		! add r11, rax ;cible + start 
 		
 		! add r11, 4
-		! mov r15, [rcx + 3 * 8] ;lg
+		! mov r15, [rcx + 3 * 8] ;ImageWidth
 		! shl r15, 2
 		! pxor xmm0, xmm0
 		! mov eax, [rcx + 6 * 8] ;opt
@@ -4055,7 +3673,7 @@ Module Filter
 		! punpcklbw xmm15, xmm0
 		
 		! xor rax, rax
-		! mov eax, [rcx + 4 * 8] ;ht
+		! mov eax, [rcx + 4 * 8] ;ImageHeight
 		! mov r13, [p.v_start]
 		! Sobel_boucle_y : 
 		
@@ -4083,7 +3701,7 @@ Module Filter
 		! punpcklbw xmm8, xmm0
 		
 		! xor rax, rax
-		! mov eax, [rcx + 3 * 8] ;lg
+		! mov eax, [rcx + 3 * 8] ;ImageWidth
 		! mov r14, rax
 		! sub r14, 2
 		
@@ -4240,7 +3858,7 @@ Module Filter
 		! add r11, rax ;cible + start 
 		! add rbx, rax ;mask + start 
 		
-		! mov r15, [rcx + 3 * 8] ;lg
+		! mov r15, [rcx + 3 * 8] ;ImageWidth
 		! shl r15, 2
 		! pxor xmm0, xmm0
 		! mov eax, [rcx + 6 * 8] ;opt
@@ -4249,7 +3867,7 @@ Module Filter
 		! punpcklbw xmm15, xmm0
 		
 		! xor rax, rax
-		! mov eax, [rcx + 4 * 8] ;ht
+		! mov eax, [rcx + 4 * 8] ;ImageHeight
 		! mov r13, [p.v_start]
 		! Sobel_boucle_y2 : 
 		
@@ -4279,7 +3897,7 @@ Module Filter
 		! punpcklbw xmm8, xmm0
 		
 		! xor rax, rax
-		! mov eax, [rcx + 3 * 8] ;lg
+		! mov eax, [rcx + 3 * 8] ;ImageWidth
 		! mov r14, rax
 		! sub r14, 2
 		
@@ -4856,12 +4474,12 @@ Module Filter
 		
 	EndProcedure
 	
-	
 EndModule
 
 ; IDE Options = PureBasic 6.00 Beta 8 (Windows - x64)
-; CursorPosition = 16
-; Folding = DAAAAAg
+; CursorPosition = 654
+; FirstLine = 42
+; Folding = DAAAAAA-
 ; Optimizer
 ; EnableAsm
 ; EnableThread

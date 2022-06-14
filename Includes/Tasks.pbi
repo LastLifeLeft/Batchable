@@ -2,9 +2,51 @@
 	EnableExplicit
 	
 	; Private Variale, structure and constants
-	Global *CurrentSettings
+	Global *CurrentSettings, *CustomCallbackSettings
 	Global FontBold = FontID(LoadFont(#PB_Any, "Arial Black", 8, #PB_Font_HighQuality))
 	Global NewMap GadgetMap()
+	Global NewList ThreadedQueue.Queue(), ThreadID, ThreadInterupt, ThreadCallback, ThreadEndEvent
+	
+	; private procedures declaration
+	Declare ProcessThread(Image)
+	
+	; Public procedures
+	Procedure Process(Image, List TaskQueue.Queue(), EndEvent = #Null)
+		Protected *Result, Parameters.s 
+		
+		If ThreadID ; If a preview was rendering, stop it.
+			ThreadInterupt = #True
+			WaitThread(ThreadID)
+		EndIf
+		
+		ThreadInterupt = #False
+		ThreadEndEvent = EndEvent
+		
+		CopyList(TaskQueue(), ThreadedQueue())
+		ThreadID = CreateThread(@ProcessThread(), CopyImage(Image, #PB_Any))
+		
+		ProcedureReturn 0
+	EndProcedure
+	
+	; Private procedures
+	Procedure ProcessThread(Image)
+		ForEach ThreadedQueue()
+			If ThreadInterupt
+				FreeImage(Image)
+				ProcedureReturn #False
+			EndIf
+			
+			Task(ThreadedQueue()\ID)\Execute(Image, ThreadedQueue()\Settings)
+		Next
+		
+		If Not ThreadInterupt And ThreadEndEvent
+			PostEvent(ThreadEndEvent, 0, 0, 0, Image)
+		Else
+			FreeImage(Image)
+		EndIf
+		
+		ThreadID = 0
+	EndProcedure
 	
 	;{ Helpers
 	CompilerIf #PB_Compiler_OS = #PB_OS_Windows ; Fix color
@@ -52,8 +94,134 @@
 		Task(#Task_#TaskName)\IconID = ImageID(CatchImage(#PB_Any, ?TaskName))
 		Task(#Task_#TaskName)\Populate = @TaskName#_Populate()
 		Task(#Task_#TaskName)\CleanUp = @TaskName#_CleanUp()
+		Task(#Task_#TaskName)\Serialize = @TaskName#_Serialize()
+		Task(#Task_#TaskName)\Execute = @TaskName#_Execute()
 		Task(#Task_#TaskName)\DefaultSettings = AllocateMemory(SizeOf(TaskName#_Settings))
 	EndMacro
+	;}
+	
+	; Tasks
+	
+	;{ Color Balance
+	Structure ColorBalance_Settings
+		Red.c
+		Green.c
+		Blue.c
+	EndStructure
+	
+	Structure ColorBalance_FilterSettings
+		Red.d
+		Green.d
+		Blue.d
+	EndStructure
+	
+	Procedure ColorBalance_RedTrackBarHandler()
+		Protected *Settings.ColorBalance_Settings = *CurrentSettings
+		*Settings\Red = GetGadgetState(EventGadget()) + 255
+		Preview::Update()
+	EndProcedure
+	
+	Procedure ColorBalance_GreenTrackBarHandler()
+		Protected *Settings.ColorBalance_Settings = *CurrentSettings
+		*Settings\Green = GetGadgetState(EventGadget()) + 255
+		Preview::Update()
+	EndProcedure
+	
+	Procedure ColorBalance_BlueTrackBarHandler()
+		Protected *Settings.ColorBalance_Settings = *CurrentSettings
+		*Settings\Blue = GetGadgetState(EventGadget()) + 255
+		Preview::Update()
+	EndProcedure
+	
+	Procedure ColorBalance_Populate(*Settings.ColorBalance_Settings)
+		*CurrentSettings = *Settings
+		
+		GadgetMap("Red Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Red:")
+		SetTitleColor(GadgetMap("Red Text"))
+		GadgetMap("Red Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, -255, 255, UITK::#Trackbar_ShowState)
+		AddGadgetItem(GadgetMap("Red Trackbar"), 0, "")
+		SetGadgetColor(GadgetMap("Red Trackbar"), UITK::#Color_Special3_Cold, SetAlpha(UITK::WindowGetColor(MainWindow::Window, UITK::#Color_Special1_Cold), 255))
+		SetTrackBarColor(GadgetMap("Red Trackbar"))
+		SetGadgetState(GadgetMap("Red Trackbar"), *Settings\Red - 255)
+		BindGadgetEvent(GadgetMap("Red Trackbar"), @ColorBalance_RedTrackBarHandler(), #PB_EventType_Change)
+		
+		GadgetMap("Green Text") = TextGadget(#PB_Any, #Margin, #Margin + 75, MainWindow::TaskContainerGadgetWidth, 15, "Green:")
+		SetTitleColor(GadgetMap("Green Text"))
+		GadgetMap("Green Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 95, MainWindow::TaskContainerGadgetWidth, 40, -255, 255, UITK::#Trackbar_ShowState)
+		AddGadgetItem(GadgetMap("Green Trackbar"), 0, "")
+		SetGadgetColor(GadgetMap("Green Trackbar"), UITK::#Color_Special3_Cold, SetAlpha(UITK::WindowGetColor(MainWindow::Window, UITK::#Color_Special2_Cold), 255))
+		SetTrackBarColor(GadgetMap("Green Trackbar"))
+		SetGadgetState(GadgetMap("Green Trackbar"), *Settings\Green - 255)
+		BindGadgetEvent(GadgetMap("Green Trackbar"), @ColorBalance_GreenTrackBarHandler(), #PB_EventType_Change)
+		
+		GadgetMap("Blue Text") = TextGadget(#PB_Any, #Margin, #Margin + 150, MainWindow::TaskContainerGadgetWidth, 15, "Blue:")
+		SetTitleColor(GadgetMap("Blue Text"))
+		GadgetMap("Blue Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 170, MainWindow::TaskContainerGadgetWidth, 40, -255, 255, UITK::#Trackbar_ShowState)
+		AddGadgetItem(GadgetMap("Blue Trackbar"), 0, "")
+		SetTrackBarColor(GadgetMap("Blue Trackbar"))
+		SetGadgetState(GadgetMap("Blue Trackbar"), *Settings\Blue - 255)
+		BindGadgetEvent(GadgetMap("Blue Trackbar"), @ColorBalance_BlueTrackBarHandler(), #PB_EventType_Change)
+	EndProcedure
+	
+	Procedure ColorBalance_CleanUp()
+		FreeGadget(GadgetMap("Red Text"))
+		FreeGadget(GadgetMap("Green Text"))
+		FreeGadget(GadgetMap("Blue Text"))
+		
+		UnbindGadgetEvent(GadgetMap("Red Trackbar"), @ColorBalance_RedTrackBarHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Red Trackbar"))
+		UnbindGadgetEvent(GadgetMap("Green Trackbar"), @ColorBalance_GreenTrackBarHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Green Trackbar"))
+		UnbindGadgetEvent(GadgetMap("Blue Trackbar"), @ColorBalance_BlueTrackBarHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Blue Trackbar"))
+		ClearMap(GadgetMap())
+	EndProcedure
+	
+	Procedure ColorBalance_Serialize(*Settings.ColorBalance_Settings)
+		Protected JSON = CreateJSON(#PB_Any), *Result, ComposedJSON.s
+		InsertJSONStructure(JSONValue(JSON), *Settings, ColorBalance_Settings)
+		ComposedJSON = ComposeJSON(JSON)
+		*Result = AllocateMemory(StringByteLength(ComposedJSON) + 2)
+		PokeS(*Result, ComposedJSON)
+		FreeJSON(JSON)
+		
+		ProcedureReturn *Result
+	EndProcedure
+	
+	Procedure ColorBalance_CustomCallback(x, y, SourceColor, TargetColor)
+		Protected *FilterSettings.ColorBalance_FilterSettings = *CustomCallbackSettings
+		Protected Red.c = Red(SourceColor) * *FilterSettings\Red
+		Protected Green.c = Green(SourceColor) * *FilterSettings\Green
+		Protected Blue.c = Blue(SourceColor) * *FilterSettings\Blue
+		If Red > 255 : Red = 255 : EndIf
+		If Green > 255 : Green = 255 : EndIf
+		If Blue > 255 : Blue = 255 : EndIf
+		
+		ProcedureReturn RGBA(Red, Green, Blue,Alpha(SourceColor))
+	EndProcedure
+
+	Procedure ColorBalance_Execute(Image, *Settings.ColorBalance_Settings)
+		Protected ColorBalance_FilterSettings.ColorBalance_FilterSettings
+		ColorBalance_FilterSettings\Red = *Settings\Red / 255 
+		ColorBalance_FilterSettings\Green = *Settings\Green / 255
+		ColorBalance_FilterSettings\Blue = *Settings\Blue / 255
+		*CustomCallbackSettings = @ColorBalance_FilterSettings
+		StartDrawing(ImageOutput(Image))
+		DrawingMode(#PB_2DDrawing_CustomFilter)
+		CustomFilterCallback(@ColorBalance_CustomCallback())
+		DrawAlphaImage(ImageID(Image), 0, 0)
+		StopDrawing()
+		
+		ProcedureReturn SizeOf(ColorBalance_Settings)
+	EndProcedure
+	
+	Task(#Task_ColorBalance)\Name = "Color Balance"
+	Task(#Task_ColorBalance)\Description = "Change the global adjustment of the intensities of the colors."
+	Task(#Task_ColorBalance)\Type = MainWindow::#TaskType_Colors
+	FillList(ColorBalance)
+	PokeC(Task(#Task_ColorBalance)\DefaultSettings, 255)
+	PokeC(Task(#Task_ColorBalance)\DefaultSettings + SizeOf(Character), 255)
+	PokeC(Task(#Task_ColorBalance)\DefaultSettings + SizeOf(Character) * 2, 255)
 	;}
 	
 	;{ Alpha Threshold
@@ -86,646 +254,30 @@
 		ClearMap(GadgetMap())
 	EndProcedure
 	
+	Procedure AlphaThreshold_Serialize(*Settings.AlphaThreshold_Settings)
+		
+	EndProcedure
+	
+	Procedure AlphaThreshold_CustomCallback(x, y, SourceColor, TargetColor)
+		ProcedureReturn RGBA(Red(SourceColor), Green(SourceColor), Blue(SourceColor), Bool(Alpha(SourceColor) >= *CustomCallbackSettings) * 255)
+	EndProcedure
+	
+	Procedure AlphaThreshold_Execute(Image, *Settings.AlphaThreshold_Settings)
+		*CustomCallbackSettings = *Settings\Threshold
+		StartDrawing(ImageOutput(Image))
+		DrawingMode(#PB_2DDrawing_CustomFilter)
+		CustomFilterCallback(@AlphaThreshold_CustomCallback())
+		DrawAlphaImage(ImageID(Image), 0, 0)
+		StopDrawing()
+		
+		ProcedureReturn SizeOf(AlphaThreshold_Settings)
+	EndProcedure
+	
 	Task(#Task_AlphaThreshold)\Name = "Alpha Threshold"
 	Task(#Task_AlphaThreshold)\Description = "Remove gradation to alpha transparency according to a given value."
 	Task(#Task_AlphaThreshold)\Type = MainWindow::#TaskType_Colors
 	FillList(AlphaThreshold)
 	PokeA(Task(#Task_AlphaThreshold)\DefaultSettings, 128)
-	;}
-	
-	;{ Channel Swap
-	Structure ChannelSwap_Settings
-		Red.a
-		Green.a
-		Blue.a
-		Alpha.a
-	EndStructure
-	
-	Global ChannelSwap_Icon_Red, ChannelSwap_Icon_Green, ChannelSwap_Icon_Blue, ChannelSwap_Icon_Alpha
-	
-	ChannelSwap_Icon_Red = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Red))
-	ChannelSwap_Icon_Green = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Green))
-	ChannelSwap_Icon_Blue = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Blue))
-	ChannelSwap_Icon_Alpha = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Alpha))
-	
-	Procedure ChannelSwap_RedComboHandler()
-		Protected *Settings.ChannelSwap_Settings = *CurrentSettings
-		*Settings\Red = GetGadgetState(EventGadget())
-		Preview::Update()
-	EndProcedure
-	
-	Procedure ChannelSwap_GreenComboHandler()
-		Protected *Settings.ChannelSwap_Settings = *CurrentSettings
-		*Settings\Green = GetGadgetState(EventGadget())
-		Preview::Update()
-	EndProcedure
-	
-	Procedure ChannelSwap_BlueComboHandler()
-		Protected *Settings.ChannelSwap_Settings = *CurrentSettings
-		*Settings\Blue = GetGadgetState(EventGadget())
-		Preview::Update()
-	EndProcedure
-	
-	Procedure ChannelSwap_AlphaComboHandler()
-		Protected *Settings.ChannelSwap_Settings = *CurrentSettings
-		*Settings\Alpha = GetGadgetState(EventGadget())
-		Preview::Update()
-	EndProcedure
-	
-	Procedure ChannelSwap_Populate(*Settings.ChannelSwap_Settings)
-		*CurrentSettings = *Settings
-		
-		GadgetMap("Red Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the red Channel")
-		SetTitleColor(GadgetMap("Red Text"))
-		GadgetMap("Red Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 30)
-		SetComboColor(GadgetMap("Red Combo"))
-		AddGadgetItem(GadgetMap("Red Combo"), -1, "Red", ChannelSwap_Icon_Red)
-		AddGadgetItem(GadgetMap("Red Combo"), -1, "Green", ChannelSwap_Icon_Green)
-		AddGadgetItem(GadgetMap("Red Combo"), -1, "Blue", ChannelSwap_Icon_Blue)
-		AddGadgetItem(GadgetMap("Red Combo"), -1, "Alpha", ChannelSwap_Icon_Alpha)
-		BindGadgetEvent(GadgetMap("Red Combo"), @ChannelSwap_RedComboHandler(), #PB_EventType_Change)
-		SetGadgetState(GadgetMap("Red Combo"), *Settings\Red)
-		
-		GadgetMap("Green Text") = TextGadget(#PB_Any, #Margin, #Margin + 65, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the green Green")
-		SetTitleColor(GadgetMap("Green Text"))
-		GadgetMap("Green Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 85, MainWindow::TaskContainerGadgetWidth, 30)
-		SetComboColor(GadgetMap("Green Combo"))
-		AddGadgetItem(GadgetMap("Green Combo"), -1, "Red", ChannelSwap_Icon_Red)
-		AddGadgetItem(GadgetMap("Green Combo"), -1, "Green", ChannelSwap_Icon_Green)
-		AddGadgetItem(GadgetMap("Green Combo"), -1, "Blue", ChannelSwap_Icon_Blue)
-		AddGadgetItem(GadgetMap("Green Combo"), -1, "Alpha", ChannelSwap_Icon_Alpha)
-		BindGadgetEvent(GadgetMap("Green Combo"), @ChannelSwap_GreenComboHandler(), #PB_EventType_Change)
-		SetGadgetState(GadgetMap("Green Combo"), *Settings\Green)
-		
-		GadgetMap("Blue Text") = TextGadget(#PB_Any, #Margin, #Margin + 130, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the blue Channel")
-		SetTitleColor(GadgetMap("Blue Text"))
-		GadgetMap("Blue Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 150, MainWindow::TaskContainerGadgetWidth, 30)
-		SetComboColor(GadgetMap("Blue Combo"))
-		AddGadgetItem(GadgetMap("Blue Combo"), -1, "Red", ChannelSwap_Icon_Red)
-		AddGadgetItem(GadgetMap("Blue Combo"), -1, "Green", ChannelSwap_Icon_Green)
-		AddGadgetItem(GadgetMap("Blue Combo"), -1, "Blue", ChannelSwap_Icon_Blue)
-		AddGadgetItem(GadgetMap("Blue Combo"), -1, "Alpha", ChannelSwap_Icon_Alpha)
-		BindGadgetEvent(GadgetMap("Blue Combo"), @ChannelSwap_BlueComboHandler(), #PB_EventType_Change)
-		SetGadgetState(GadgetMap("Blue Combo"), *Settings\Blue)
-		
-		GadgetMap("Alpha Text") = TextGadget(#PB_Any, #Margin, #Margin + 195, MainWindow::TaskContainerGadgetWidth, 15, "Channel used for the alpha Channel")
-		SetTitleColor(GadgetMap("Alpha Text"))
-		GadgetMap("Alpha Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 215, MainWindow::TaskContainerGadgetWidth, 30)
-		SetComboColor(GadgetMap("Alpha Combo"))
-		AddGadgetItem(GadgetMap("Alpha Combo"), -1, "Red", ChannelSwap_Icon_Red)
-		AddGadgetItem(GadgetMap("Alpha Combo"), -1, "Green", ChannelSwap_Icon_Green)
-		AddGadgetItem(GadgetMap("Alpha Combo"), -1, "Blue", ChannelSwap_Icon_Blue)
-		AddGadgetItem(GadgetMap("Alpha Combo"), -1, "Alpha", ChannelSwap_Icon_Alpha)
-		BindGadgetEvent(GadgetMap("Alpha Combo"), @ChannelSwap_AlphaComboHandler(), #PB_EventType_Change)
-		SetGadgetState(GadgetMap("Alpha Combo"), *Settings\Alpha)
-		
-	EndProcedure
-	
-	Procedure ChannelSwap_CleanUp()
-		FreeGadget(GadgetMap("Red Text"))
-		BindGadgetEvent(GadgetMap("Red Combo"), @ChannelSwap_RedComboHandler(), #PB_EventType_Change)
-		FreeGadget(GadgetMap("Red Combo"))
-		
-		FreeGadget(GadgetMap("Green Text"))
-		BindGadgetEvent(GadgetMap("Green Combo"), @ChannelSwap_GreenComboHandler(), #PB_EventType_Change)
-		FreeGadget(GadgetMap("Green Combo"))
-		
-		FreeGadget(GadgetMap("Blue Text"))
-		BindGadgetEvent(GadgetMap("Blue Combo"), @ChannelSwap_BlueComboHandler(), #PB_EventType_Change)
-		FreeGadget(GadgetMap("Blue Combo"))
-		
-		FreeGadget(GadgetMap("Alpha Text"))
-		BindGadgetEvent(GadgetMap("Alpha Combo"), @ChannelSwap_AlphaComboHandler(), #PB_EventType_Change)
-		FreeGadget(GadgetMap("Alpha Combo"))
-		
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_ChannelSwap)\Name = "Channel Swap"
-	Task(#Task_ChannelSwap)\Description = "Change each color channels assignation."
-	Task(#Task_ChannelSwap)\Type = MainWindow::#TaskType_Colors
-	FillList(ChannelSwap)
-	PokeA(Task(#Task_ChannelSwap)\DefaultSettings, 0)
-	PokeA(Task(#Task_ChannelSwap)\DefaultSettings + OffsetOf(ChannelSwap_Settings\Green), 1)
-	PokeA(Task(#Task_ChannelSwap)\DefaultSettings + OffsetOf(ChannelSwap_Settings\Blue), 2)
-	PokeA(Task(#Task_ChannelSwap)\DefaultSettings + OffsetOf(ChannelSwap_Settings\Alpha), 3)
-	;}
-	
-	;{ Channel Displacement
-	Structure ChannelDisplacement_Settings
-		Null.a
-	EndStructure
-	
-	Procedure ChannelDisplacement_Populate(*Settings.ChannelDisplacement_Settings)
-		*CurrentSettings = *Settings
-		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
-	EndProcedure
-	
-	Procedure ChannelDisplacement_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_ChannelDisplacement)\Name = "Channel Displacement"
-	Task(#Task_ChannelDisplacement)\Description = "Move around each color channel individually."
-	Task(#Task_ChannelDisplacement)\Type = MainWindow::#TaskType_Colors
-	FillList(ChannelDisplacement)
-	;}
-	
-	;{ Invert Color
-	Structure Invertcolor_Settings
-		Null.a
-	EndStructure
-	
-	Procedure Invertcolor_Populate(*Settings.Invertcolor_Settings)
-		*CurrentSettings = *Settings
-		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
-	EndProcedure
-	
-	Procedure Invertcolor_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_InvertColor)\Name = "Invert Color"
-	Task(#Task_InvertColor)\Description = "Reverse the colors, black becomes white, white becomes black."
-	Task(#Task_InvertColor)\Type = MainWindow::#TaskType_Colors
-	FillList(Invertcolor)
-	;}
-	
-	;{ Black & White
-	Structure BlackAndWhite_Settings
-		Null.a
-	EndStructure
-	
-	Procedure BlackAndWhite_Populate(*Settings.BlackAndWhite_Settings)
-		*CurrentSettings = *Settings
-		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
-	EndProcedure
-	
-	Procedure BlackAndWhite_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_BlackAndWhite)\Name = "Black & White"
-	Task(#Task_BlackAndWhite)\Description = "Convert all colors to black and white (greyscale)."
-	Task(#Task_BlackAndWhite)\Type = MainWindow::#TaskType_Colors
-	FillList(BlackAndWhite)
-	;}
-	
-	;{ Color Balance
-	Structure ColorBalance_Settings
-		Red.a
-		Green.a
-		Blue.a
-	EndStructure
-	
-	Procedure ColorBalance_RedTrackBarHandler()
-		Protected *Settings.ColorBalance_Settings = *CurrentSettings
-		*Settings\Red = GetGadgetState(EventGadget())
-		Preview::Update()
-	EndProcedure
-	
-	Procedure ColorBalance_GreenTrackBarHandler()
-		Protected *Settings.ColorBalance_Settings = *CurrentSettings
-		*Settings\Green = GetGadgetState(EventGadget())
-		Preview::Update()
-	EndProcedure
-	
-	Procedure ColorBalance_BlueTrackBarHandler()
-		Protected *Settings.ColorBalance_Settings = *CurrentSettings
-		*Settings\Blue = GetGadgetState(EventGadget())
-		Preview::Update()
-	EndProcedure
-	
-	Procedure ColorBalance_Populate(*Settings.ColorBalance_Settings)
-		*CurrentSettings = *Settings
-		
-		GadgetMap("Red Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Red:")
-		SetTitleColor(GadgetMap("Red Text"))
-		GadgetMap("Red Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 0, 255, UITK::#Trackbar_ShowState)
-		SetGadgetColor(GadgetMap("Red Trackbar"), UITK::#Color_Special3_Cold, SetAlpha(UITK::WindowGetColor(MainWindow::Window, UITK::#Color_Special1_Cold), 255))
-		SetTrackBarColor(GadgetMap("Red Trackbar"))
-		SetGadgetState(GadgetMap("Red Trackbar"), *Settings\Red)
-		BindGadgetEvent(GadgetMap("Red Trackbar"), @ColorBalance_RedTrackBarHandler(), #PB_EventType_Change)
-		
-		GadgetMap("Green Text") = TextGadget(#PB_Any, #Margin, #Margin + 75, MainWindow::TaskContainerGadgetWidth, 15, "Green:")
-		SetTitleColor(GadgetMap("Green Text"))
-		GadgetMap("Green Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 95, MainWindow::TaskContainerGadgetWidth, 40, 0, 255, UITK::#Trackbar_ShowState)
-		SetGadgetColor(GadgetMap("Green Trackbar"), UITK::#Color_Special3_Cold, SetAlpha(UITK::WindowGetColor(MainWindow::Window, UITK::#Color_Special2_Cold), 255))
-		SetTrackBarColor(GadgetMap("Green Trackbar"))
-		SetGadgetState(GadgetMap("Green Trackbar"), *Settings\Green)
-		BindGadgetEvent(GadgetMap("Green Trackbar"), @ColorBalance_GreenTrackBarHandler(), #PB_EventType_Change)
-		
-		GadgetMap("Blue Text") = TextGadget(#PB_Any, #Margin, #Margin + 150, MainWindow::TaskContainerGadgetWidth, 15, "Blue:")
-		SetTitleColor(GadgetMap("Blue Text"))
-		GadgetMap("Blue Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 170, MainWindow::TaskContainerGadgetWidth, 40, 0, 255, UITK::#Trackbar_ShowState)
-		SetTrackBarColor(GadgetMap("Blue Trackbar"))
-		SetGadgetState(GadgetMap("Blue Trackbar"), *Settings\Blue)
-		BindGadgetEvent(GadgetMap("Blue Trackbar"), @ColorBalance_BlueTrackBarHandler(), #PB_EventType_Change)
-	EndProcedure
-	
-	Procedure ColorBalance_CleanUp()
-		FreeGadget(GadgetMap("Red Text"))
-		FreeGadget(GadgetMap("Green Text"))
-		FreeGadget(GadgetMap("Blue Text"))
-		
-		UnbindGadgetEvent(GadgetMap("Red Trackbar"), @ColorBalance_RedTrackBarHandler(), #PB_EventType_Change)
-		FreeGadget(GadgetMap("Red Trackbar"))
-		UnbindGadgetEvent(GadgetMap("Green Trackbar"), @ColorBalance_GreenTrackBarHandler(), #PB_EventType_Change)
-		FreeGadget(GadgetMap("Green Trackbar"))
-		UnbindGadgetEvent(GadgetMap("Blue Trackbar"), @ColorBalance_BlueTrackBarHandler(), #PB_EventType_Change)
-		FreeGadget(GadgetMap("Blue Trackbar"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_ColorBalance)\Name = "Color Balance"
-	Task(#Task_ColorBalance)\Description = "Change the global adjustment of the intensities of the colors."
-	Task(#Task_ColorBalance)\Type = MainWindow::#TaskType_Colors
-	FillList(ColorBalance)
-	PokeA(Task(#Task_ColorBalance)\DefaultSettings, 255)
-	PokeA(Task(#Task_ColorBalance)\DefaultSettings + SizeOf(Ascii), 255)
-	PokeA(Task(#Task_ColorBalance)\DefaultSettings + SizeOf(Ascii) * 2, 255)
-	;}
-	
-	;{ Posterization
-	Structure Posterization_Settings
-		Null.a
-	EndStructure
-	
-	Procedure Posterization_Populate(*Settings.Posterization_Settings)
-		*CurrentSettings = *Settings
-		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
-	EndProcedure
-	
-	Procedure Posterization_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_Posterization)\Name = "Posterization"
-	Task(#Task_Posterization)\Description = "Reduce the range of colors used to fewer tones."
-	Task(#Task_Posterization)\Type = MainWindow::#TaskType_Colors
-	FillList(Posterization)
-	;}
-	
-	;{ Outline
-	Structure Outline_Settings
-		Null.a
-	EndStructure
-	
-	Procedure Outline_Populate(*Settings.Outline_Settings)
-		*CurrentSettings = *Settings
-		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
-	EndProcedure
-	
-	Procedure Outline_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_Outline)\Name = "Outline"
-	Task(#Task_Outline)\Description = "Add an outline around objects."
-	Task(#Task_Outline)\Type = MainWindow::#TaskType_Transformation
-	FillList(Outline)
-	;}
-	
-	;{ Trim Border
-	Structure TrimImage_Settings
-		Null.a
-	EndStructure
-	
-	Procedure TrimImage_Populate(*Settings.TrimImage_Settings)
-		*CurrentSettings = *Settings
-		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
-	EndProcedure
-	
-	Procedure TrimImage_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_TrimImage)\Name = "Trim Border"
-	Task(#Task_TrimImage)\Description = "Remove the transparent pixels around the images."
-	Task(#Task_TrimImage)\Type = MainWindow::#TaskType_Transformation
-	FillList(TrimImage)
-	;}
-	
-	;{ Resize
-	Structure Resize_Settings
-		Null.a
-	EndStructure
-	
-	Procedure Resize_Populate(*Settings.Resize_Settings)
-		*CurrentSettings = *Settings
-		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Target Size")
-		SetTitleColor(GadgetMap("Title Text"))
-		
-		GadgetMap("Algorithm Text") = TextGadget(#PB_Any, #Margin, #Margin + 50, MainWindow::TaskContainerGadgetWidth, 15, "Algorithm used")
-		SetTitleColor(GadgetMap("Algorithm Text"))
-		
-		GadgetMap("Algorithm Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 70, MainWindow::TaskContainerGadgetWidth, 30)
-		SetComboColor(GadgetMap("Algorithm Combo"))
-		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "Automatic (chosen for each image)")
-		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "Nearest Neighbor")
-		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "Super Sampling")
-		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "Bicubic")
-		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "Bilinear")
-		SetGadgetState(GadgetMap("Algorithm Combo"), 0)
-		
-		GadgetMap("Padding Text") = TextGadget(#PB_Any, #Margin, #Margin + 115, MainWindow::TaskContainerGadgetWidth, 15, "Aspect ratio handling")
-		SetTitleColor(GadgetMap("Padding Text"))
-		
-		GadgetMap("Padding Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 135, MainWindow::TaskContainerGadgetWidth, 30)
-		SetComboColor(GadgetMap("Padding Combo"))
-		AddGadgetItem(GadgetMap("Padding Combo"), -1, "Scale Inner (LetterBoxing)")
-		AddGadgetItem(GadgetMap("Padding Combo"), -1, "Scale Inner (Crop)")
-		AddGadgetItem(GadgetMap("Padding Combo"), -1, "Scale Outer")
-		AddGadgetItem(GadgetMap("Padding Combo"), -1, "Stretch")
-		SetGadgetState(GadgetMap("Padding Combo"), 0)
-	EndProcedure
-	
-	Procedure Resize_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Algorithm Text"))
-		FreeGadget(GadgetMap("Algorithm Combo"))
-		FreeGadget(GadgetMap("Padding Text"))
-		FreeGadget(GadgetMap("Padding Combo"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_Resize)\Name = "Resize"
-	Task(#Task_Resize)\Description = "Resize to target size using various algorithms."
-	Task(#Task_Resize)\Type = MainWindow::#TaskType_Transformation
-	FillList(Resize)
-	;}
-	
-	;{ Blur
-	Structure Blur_Settings
-		Null.a
-	EndStructure
-	
-	Procedure Blur_TrackBarHandler()
-		Protected *Settings.Blur_Settings = *CurrentSettings
-		Preview::Update()
-	EndProcedure
-	
-	Procedure Blur_Populate(*Settings.Blur_Settings)
-		*CurrentSettings = *Settings
-		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
-	EndProcedure
-	
-	Procedure Blur_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_Blur)\Name = "Blur"
-	Task(#Task_Blur)\Description = "Apply a gaussian blur on the images."
-	Task(#Task_Blur)\Type = MainWindow::#TaskType_Transformation
-	FillList(Blur)
-	;}
-	
-	;{ Watermark
-	Structure Watermark_Settings
-		Null.a
-	EndStructure
-	
-	Procedure Watermark_Populate(*Settings.Watermark_Settings)
-		*CurrentSettings = *Settings
-		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
-	EndProcedure
-	
-	Procedure Watermark_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_Watermark)\Name = "Watermark"
-	Task(#Task_Watermark)\Description = "Overlay the images with a text or another image."
-	Task(#Task_Watermark)\Type = MainWindow::#TaskType_Transformation
-	FillList(Watermark)
-	;}
-	
-	;{ Crop options
-	Structure Crop_Settings
-		Null.a
-	EndStructure
-	
-	Procedure Crop_Populate(*Settings.Crop_Settings)
-		*CurrentSettings = *Settings
-		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
-	EndProcedure
-	
-	Procedure Crop_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_Crop)\Name = "Crop"
-	Task(#Task_Crop)\Description = "Something something, croping image something something."
-	Task(#Task_Crop)\Type = MainWindow::#TaskType_Transformation
-	FillList(Crop)
-	;}
-	
-	;{ RotSprite
-	Structure RotSprite_Settings
-		Angle.w
-	EndStructure
-	
-	Procedure RotSprite_TrackBarHandler()
-		Protected *Settings.RotSprite_Settings = *CurrentSettings
-		*Settings\Angle = GetGadgetState(EventGadget())
-		Preview::Update()
-	EndProcedure
-	
-	Procedure RotSprite_Populate(*Settings.RotSprite_Settings)
-		*CurrentSettings = *Settings
-		GadgetMap("Angle Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Rotation angle:")
-		SetTitleColor(GadgetMap("Angle Text"))
-		
-		GadgetMap("Angle Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 0, 360, UITK::#Trackbar_ShowState)
-		BindGadgetEvent(GadgetMap("Angle Trackbar"), @RotSprite_TrackBarHandler(), #PB_EventType_Change)
-		
-		SetGadgetState(GadgetMap("Angle Trackbar"), *Settings\Angle)
-		SetTrackBarColor(GadgetMap("Angle Trackbar"))
-	EndProcedure
-	
-	Procedure RotSprite_CleanUp()
-		FreeGadget(GadgetMap("Angle Text"))
-		FreeGadget(GadgetMap("Angle Trackbar"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_Rotsprite)\Name = "Rotsprite"
-	Task(#Task_Rotsprite)\Description = "Rotates images using the Rotsprite algorithm by Xenowhirl."
-	Task(#Task_Rotsprite)\Type = MainWindow::#TaskType_PixelArt
-	FillList(RotSprite)
-	PokeW(Task(#Task_Rotsprite)\DefaultSettings, 0)
-	;}
-	
-	;{ Pixel-art upscale
-	Structure PixelArtUpscale_Settings
-		Scale.a
-		Algorithm.a
-	EndStructure
-	
-	Procedure PixelArtUpscale_TrackBarHandler()
-		Protected *Settings.PixelArtUpscale_Settings = *CurrentSettings
-		*Settings\Scale = GetGadgetState(EventGadget())
-		Preview::Update()
-	EndProcedure
-	
-	Procedure PixelArtUpscale_ComboHandler()
-		Protected *Settings.PixelArtUpscale_Settings = *CurrentSettings
-		*Settings\Algorithm = GetGadgetState(EventGadget())
-		Preview::Update()
-	EndProcedure
-	
-	Procedure PixelArtUpscale_Populate(*Settings.PixelArtUpscale_Settings)
-		Protected Width
-		*CurrentSettings = *Settings
-		Width = Round((MainWindow::TaskContainerGadgetWidth - 3 * #Margin) / 4, #PB_Round_Nearest)
-		
-		GadgetMap("Scale Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Scale:")
-		SetTitleColor(GadgetMap("Scale Text"))
-		
-		GadgetMap("Scale Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 2, 5)
-		SetTrackBarColor(GadgetMap("Scale Trackbar"))
-		AddGadgetItem(GadgetMap("Scale Trackbar"), 2, "x2")
-		AddGadgetItem(GadgetMap("Scale Trackbar"), 3, "x3")
-		AddGadgetItem(GadgetMap("Scale Trackbar"), 4, "x4")
-		AddGadgetItem(GadgetMap("Scale Trackbar"), 5, "x5")
-		SetGadgetState(GadgetMap("Scale Trackbar"), *Settings\Scale)
-		BindGadgetEvent(GadgetMap("Scale Trackbar"), @PixelArtUpscale_TrackBarHandler(), #PB_EventType_Change)
-		
-		GadgetMap("Algorithm Text") = TextGadget(#PB_Any, #Margin, #Margin + 75, MainWindow::TaskContainerGadgetWidth, 15, "Algorithm:")
-		SetTitleColor(GadgetMap("Algorithm Text"))
-		GadgetMap("Algorithm Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 95, MainWindow::TaskContainerGadgetWidth, 30)
-		SetComboColor(GadgetMap("Algorithm Combo"))
-		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "xBR")
-		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "HQx")
-		AddGadgetItem(GadgetMap("Algorithm Combo"), -1, "Kopf–Lischinski ")
-		SetGadgetState(GadgetMap("Algorithm Combo"), *Settings\Algorithm)
-		BindGadgetEvent(GadgetMap("Algorithm Combo"), @PixelArtUpscale_ComboHandler(), #PB_EventType_Change)
-		
-	EndProcedure
-	
-	Procedure PixelArtUpscale_CleanUp()
-		FreeGadget(GadgetMap("Scale Text"))
-		UnbindGadgetEvent(GadgetMap("Scale Trackbar"), @PixelArtUpscale_TrackBarHandler(), #PB_EventType_Change)
-		FreeGadget(GadgetMap("Scale Trackbar"))
-		
-		FreeGadget(GadgetMap("Algorithm Text"))
-		UnbindGadgetEvent(GadgetMap("Algorithm Combo"), @PixelArtUpscale_ComboHandler(), #PB_EventType_Change)
-		FreeGadget(GadgetMap("Algorithm Combo"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_PixelArtUpscale)\Name = "Pixel-art upscale"
-	Task(#Task_PixelArtUpscale)\Description = "Upscale sprites using various algorithms."
-	Task(#Task_PixelArtUpscale)\Type = MainWindow::#TaskType_PixelArt
-	FillList(PixelArtUpscale)
-	PokeA(Task(#Task_PixelArtUpscale)\DefaultSettings, 2)
-	;}
-	
-	;{ Save as gif
-	Structure SaveGif_Settings
-		Null.a
-	EndStructure
-	
-	Procedure SaveGif_Populate(*Settings.SaveGif_Settings)
-		*CurrentSettings = *Settings
-		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
-	EndProcedure
-	
-	Procedure SaveGif_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_SaveGif)\Name = "Save as gif"
-	Task(#Task_SaveGif)\Description = "Merge all the images in a single gif file."
-	Task(#Task_SaveGif)\Type = MainWindow::#TaskType_Other
-	FillList(SaveGif)
-	;}
-	
-	;{ Save options
-	Structure Save_Settings
-		Null.a
-	EndStructure
-	
-	Procedure Save_Populate(*Settings.Save_Settings)
-		*CurrentSettings = *Settings
-		
-		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "No settings")
-		SetTitleColor(GadgetMap("Title Text"))
-		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, "This task output is always the same and doesn't support any setting.")
-		SetTextColor(GadgetMap("Description Text"))
-	EndProcedure
-	
-	Procedure Save_CleanUp()
-		FreeGadget(GadgetMap("Title Text"))
-		FreeGadget(GadgetMap("Description Text"))
-		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Task(#Task_Save)\Name = "Save options"
-	Task(#Task_Save)\Description = "Set up how the results should be written on the disk."
-	Task(#Task_Save)\Type = MainWindow::#TaskType_Other
-	FillList(Save)
 	;}
 	
 	DataSection ;{
@@ -819,8 +371,9 @@ EndModule
 
 
 
-; IDE Options = PureBasic 6.00 Beta 8 (Windows - x64)
-; CursorPosition = 7
-; Folding = BAAgAAAAAAAAg
+; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
+; CursorPosition = 267
+; FirstLine = 51
+; Folding = hNIgx0
 ; EnableXP
 ; DPIAware

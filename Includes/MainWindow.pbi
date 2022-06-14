@@ -48,17 +48,7 @@
 		Information.s
 		File.s
 	EndStructure
-	
-	Structure AddListInfo
-		ImageID.i
-		Description.s
-		TaskID.w		;.w is quite optimist there xD
-	EndStructure
-	
-	Structure TaskListInfo Extends AddListInfo
-		*TaskSettings
-	EndStructure
-	
+		
 	Structure AddListItem
 		Text.UITK::Text
 		*Data.AddListInfo
@@ -74,12 +64,12 @@
 		*Data.OriginalImageInfo
 	EndStructure
 	
-	Global ImageList, ImageContainer, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, TaskList, TaskContainer, ButtonAddTask, ButtonSetupTask, ButtonRemoveTask, ButtonProcess, NewTaskContainer, NewTaskReturnButton, NewTaskCombo, NewTaskList, NewTaskButton
+	Global ImageList, ImageContainer, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, TaskContainer, ButtonAddTask, ButtonSetupTask, ButtonRemoveTask, ButtonProcess, NewTaskContainer, NewTaskReturnButton, NewTaskCombo, NewTaskList, NewTaskButton
 	Global TaskSettingContainer, TaskSettingReturnButton, NewList TaskSettingList()
 	Global BoldFont = FontID(LoadFont(#PB_Any, "Segoe UI", 9, #PB_Font_HighQuality | #PB_Font_Bold))
 	Global ImageLoading, ImageError, ImageLoadingID
 	Global PreviewMutex, MiniatureThreat, NewList PreviewList.PreviewLoading()
-	Global Menu
+	Global Menu, PreviewCheckerboard
 	
 	#SupportedFileTypes = "jpgjpegpngbmptifftga"
 	
@@ -166,6 +156,18 @@
 	
 	; Public procedures
 	Procedure Open()
+		Protected LoopX, LoopY
+		
+		PreviewCheckerboard = CreateImage(#PB_Any, 128, 128, 24, FixColor($FFFFFF))
+		StartVectorDrawing(ImageVectorOutput(PreviewCheckerboard))
+		For LoopX = 0 To 128 Step 16
+			AddPathBox(LoopX, 0, 8, 128)
+			AddPathBox(0, LoopX, 128, 8)
+		Next
+		VectorSourceColor(SetAlpha($BFBFBF, 255))
+		FillPath()
+		StopVectorDrawing()
+		
 		Window = UITK::Window(#PB_Any, 0, 0, #Window_Width, #Window_Height, General::#AppName, General::ColorMode | UITK::#Window_CloseButton | #PB_Window_ScreenCentered | #PB_Window_Invisible)
 		BindEvent(#PB_Event_CloseWindow, @Handler_Close(), Window)
 		UITK::SetWindowIcon(Window, ImageID(CatchImage(#PB_Any, ?Icon)))
@@ -320,6 +322,7 @@
 		BindMenuEvent(0, #Menu_ShowPreview, @Handler_Menu_Preview())
 		
 		HideWindow(Window, #False)
+		
 	EndProcedure
 	
 	;{ Private procedures
@@ -382,12 +385,14 @@
 			If CountGadgetItems(ImageList) = 0
 				UITK::Disable(ButtonProcess, #True)
 			EndIf
+			SelectedImagePath = "" 
 		Else
 			*Data = GetGadgetItemData(ImageList, State)
 			SelectedImagePath = *Data\File
 			UITK::Disable(ButtonRemoveImage, #False)
-			Preview::Update()
 		EndIf
+		
+		Preview::Update()
 	EndProcedure
 	
 	Procedure Handler_ImageList_Forceful()
@@ -452,18 +457,20 @@
 	EndProcedure
 	
 	Procedure Handler_TaskList()
-		If GetGadgetState(TaskList) = -1
+		SelectedTaskIndex = GetGadgetState(TaskList)
+		
+		If SelectedTaskIndex = -1
 			UITK::Disable(ButtonRemoveTask, #True)
 			UITK::Disable(ButtonSetupTask, #True)
 			If CountGadgetItems(TaskList) = 0
 				UITK::Disable(ButtonProcess, #True)
 			EndIf
 		Else
-			SelectedTaskIndex = GetGadgetState(TaskList)
 			UITK::Disable(ButtonRemoveTask, #False)
 			UITK::Disable(ButtonSetupTask, #False)
-			Preview::Update()
 		EndIf
+		
+		Preview::Update()
 	EndProcedure
 	
 	Procedure Handler_TaskList_Keyboard()
@@ -486,6 +493,7 @@
 		CloseGadgetList()
 		HideGadget(TaskContainer, #True)
 		HideGadget(TaskSettingContainer, #False)
+		SetupingTask = #True
 	EndProcedure
 	
 	Procedure Handler_RemoveTask()
@@ -533,6 +541,7 @@
 		Tasks::Task(*Data\TaskID)\CleanUp()
 		HideGadget(TaskSettingContainer, #True)
 		HideGadget(TaskContainer, #False)
+		SetupingTask = #False
 	EndProcedure
 	
 	Procedure Handler_Menu_Preview()
@@ -540,13 +549,11 @@
 	EndProcedure
 	
 	Procedure Handler_Close()
-		Protected phandle, Result
-		phandle = OpenProcess_(#PROCESS_TERMINATE, #False, GetCurrentProcessId_()) ;< I clearly have issues with my windows, but killing the process is a valid workaround for my own ineptitude.
-		TerminateProcess_(phandle, @Result)
+		TerminateProcess_(OpenProcess_(#PROCESS_TERMINATE, #False, GetCurrentProcessId_()), 0) ;< I clearly have issues with my windows, but killing the process is a valid workaround for my own ineptitude.
 	EndProcedure
 	
 	Procedure Thread_LoadMiniature(Null)
-		Protected *Data.OriginalImageInfo, File.s, Finished = #False, Image, FinalImage, Width, Height
+		Protected *Data.OriginalImageInfo, File.s, Finished = #False, Image, FinalImage, Width, Height, ImageWidth, ImageHeight, X, Y
 		
 		Repeat
 		LockMutex(PreviewMutex)
@@ -571,16 +578,28 @@
 				Height = ImageHeight(Image)
 				*Data\Information = Str(Width)+"*"+Height+" - "+ImageDepth(Image)+"bits"
 				
-				If ImageWidth(Image) <= 94 And ImageHeight(Image) <= 70
-					
-				ElseIf Round(ImageWidth(Image) / 94, #PB_Round_Nearest) < Round(ImageHeight(Image) / 70, #PB_Round_Nearest)
-					ResizeImage(Image, General::Max(1, Round(70 / ImageHeight(Image) * ImageWidth(Image), #PB_Round_Nearest)), 70, #PB_Image_Smooth)
+				If Width <= 94 And Height <= 70
+					ImageWidth = Width
+					ImageHeight = Height
 				Else
-					ResizeImage(Image, 94, General::Max(1, Round(94 / ImageWidth(Image) * ImageHeight(Image), #PB_Round_Nearest)), #PB_Image_Smooth)
+					If Round(Width / 94, #PB_Round_Nearest) < Round(Height / 70, #PB_Round_Nearest)
+						ImageWidth = General::Max(1, Round(70 / Height * Width, #PB_Round_Nearest))
+						ImageHeight = General::Min(70, Height)
+					Else
+						ImageWidth = General::Min(94, Width)
+						ImageHeight = General::Max(1, Round(94 / Width * Height, #PB_Round_Nearest))
+					EndIf
+						ResizeImage(Image, ImageWidth, ImageHeight, #PB_Image_Smooth)
 				EndIf
 				
+				X =  (94 - ImageWidth) * 0.5
+				Y = (70 - ImageHeight) * 0.5
+				
+				
 				StartDrawing(ImageOutput(FinalImage))
-				DrawAlphaImage(ImageID(Image), (94 - ImageWidth(Image)) * 0.5, (70 - ImageHeight(Image)) * 0.5)
+				ClipOutput(X, Y, ImageWidth, ImageHeight) 
+				DrawImage(ImageID(PreviewCheckerboard), X, Y)
+				DrawAlphaImage(ImageID(Image), X, Y)
 				StopDrawing()
 				FreeImage(Image)
 				
@@ -741,8 +760,9 @@ EndModule
 
 
 
-; IDE Options = PureBasic 6.00 Beta 8 (Windows - x64)
-; CursorPosition = 36
-; Folding = tBQAAA9
+; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
+; CursorPosition = 164
+; FirstLine = 84
+; Folding = t2AAAI9
 ; EnableXP
 ; DPIAware
