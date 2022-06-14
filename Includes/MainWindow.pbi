@@ -1,5 +1,8 @@
 ﻿Module MainWindow
 	EnableExplicit
+	RegisterFontFile("UITK Icon Font.ttf")
+	Global IconFont = FontID(LoadFont(#PB_Any, "UITK Icon Font", 18, #PB_Font_HighQuality))
+	
 	; Macro
 	CompilerIf #PB_Compiler_OS = #PB_OS_Windows ; Fix color
 		Macro FixColor(Color)
@@ -21,9 +24,15 @@
 		EndMacro
 	CompilerEndIf
 	
-	Macro SetButtonColor(Button, Parent, BackCold, Back_Warm, BackHot, TextWarm, TextHot, ToolTip)
-		SetGadgetFont(Button, UITK::UITKFont)
-		SetGadgetAttribute(Button, UITK::#Attribute_TextScale, 24)
+	Macro SetButtonColor(Button, Parent, BackCold, Back_Warm, BackHot, TextWarm, TextHot, ToolTip, Text)
+		TempImage = CreateImage(#PB_Any, 26, 24, 32, #PB_Image_Transparent)
+		StartDrawing(ImageOutput(TempImage))
+		DrawingFont(IconFont)
+		DrawingMode(#PB_2DDrawing_AllChannels)
+		DrawText(2, 0, " "+text+" ", SetAlpha(FixColor($FAFAFB), 255), 0)
+		StopDrawing()
+		UITK::SetGadgetImage(Button, ImageID(TempImage))
+		
 		SetGadgetAttribute(Button, #PB_Canvas_Cursor, #PB_Cursor_Hand)
 		SetGadgetColor(Button, UITK::#Color_Parent, SetAlpha(Parent, 255))
 		SetGadgetColor(Button, UITK::#Color_Back_Cold, SetAlpha(BackCold, 255))
@@ -156,7 +165,7 @@
 	
 	; Public procedures
 	Procedure Open()
-		Protected LoopX, LoopY
+		Protected LoopX, LoopY, TempImage
 		
 		PreviewCheckerboard = CreateImage(#PB_Any, 128, 128, 24, FixColor($FFFFFF))
 		StartVectorDrawing(ImageVectorOutput(PreviewCheckerboard))
@@ -184,16 +193,16 @@
 		BindGadgetEvent(ImageList, @Handler_ImageList_Forceful(), UITK::#Eventtype_ForcefulChange)
 		BindGadgetEvent(ImageList, @Handler_ImageList_Keyboard(), #PB_EventType_KeyDown)
 		
-		ButtonAddImage = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "a")
-		SetButtonColor(ButtonAddImage, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add images...")
+		ButtonAddImage = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
+		SetButtonColor(ButtonAddImage, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add images...", "a")
 		BindGadgetEvent(ButtonAddImage, @Handler_AddImage(), #PB_EventType_Change)
 		
-		ButtonAddFolder = UITK::Button(#PB_Any, #Iconbar_Offset * 2 + #Iconbar_Size, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "c")
-		SetButtonColor(ButtonAddFolder, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add folder...")
+		ButtonAddFolder = UITK::Button(#PB_Any, #Iconbar_Offset * 2 + #Iconbar_Size, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
+		SetButtonColor(ButtonAddFolder, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add folder...", "c")
 		BindGadgetEvent(ButtonAddFolder, @Handler_AddFolder(), #PB_EventType_Change)
 		
-		ButtonRemoveImage = UITK::Button(#PB_Any, #Iconbar_Offset * 3 + #Iconbar_Size * 2, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "b")
-		SetButtonColor(ButtonRemoveImage, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $D83C3E, $E06365, $FAFAFB, $FAFAFB, "Remove selected image")
+		ButtonRemoveImage = UITK::Button(#PB_Any, #Iconbar_Offset * 3 + #Iconbar_Size * 2, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
+		SetButtonColor(ButtonRemoveImage, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $D83C3E, $E06365, $FAFAFB, $FAFAFB, "Remove selected image", "b")
 		BindGadgetEvent(ButtonRemoveImage, @Handler_RemoveImage(), #PB_EventType_Change)
 		UITK::Disable(ButtonRemoveImage, #True)
 		CloseGadgetList()
@@ -208,22 +217,22 @@
 		BindGadgetEvent(TaskList, @Handler_SetupTask(), UITK::#Eventtype_ForcefulChange)
 		BindGadgetEvent(TaskList, @Handler_TaskList_Keyboard(), #PB_EventType_KeyDown)
 		
-		ButtonAddTask = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "e")
-		SetButtonColor(ButtonAddTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add Task...")
+		ButtonAddTask = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
+		SetButtonColor(ButtonAddTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add Task...", "e")
 		BindGadgetEvent(ButtonAddTask, @Handler_NewTask(), #PB_EventType_Change)
 		
-		ButtonSetupTask = UITK::Button(#PB_Any, #Iconbar_Offset * 2 + #Iconbar_Size, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "g")
-		SetButtonColor(ButtonSetupTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Task settings...")
+		ButtonSetupTask = UITK::Button(#PB_Any, #Iconbar_Offset * 2 + #Iconbar_Size, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
+		SetButtonColor(ButtonSetupTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Task settings...", "g")
 		UITK::Disable(ButtonSetupTask, #True)
 		BindGadgetEvent(ButtonSetupTask, @Handler_SetupTask(), #PB_EventType_Change)
 		
-		ButtonRemoveTask = UITK::Button(#PB_Any, #Iconbar_Offset * 3 + #Iconbar_Size * 2, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "f")
-		SetButtonColor(ButtonRemoveTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $D83C3E, $E06365, $FAFAFB, $FAFAFB, "Remove selected Task")
+		ButtonRemoveTask = UITK::Button(#PB_Any, #Iconbar_Offset * 3 + #Iconbar_Size * 2, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
+		SetButtonColor(ButtonRemoveTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $D83C3E, $E06365, $FAFAFB, $FAFAFB, "Remove selected Task", "f")
 		UITK::Disable(ButtonRemoveTask, #True)
 		BindGadgetEvent(ButtonRemoveTask, @Handler_RemoveTask(), #PB_EventType_Change)
 		
-		ButtonProcess = UITK::Button(#PB_Any, #Iconbar_Offset * 4 + #Iconbar_Size * 3, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "h")
-		SetButtonColor(ButtonProcess, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $3AA55D, $6BD08B, $FAFAFB, $FAFAFB, "Start")
+		ButtonProcess = UITK::Button(#PB_Any, #Iconbar_Offset * 4 + #Iconbar_Size * 3, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
+		SetButtonColor(ButtonProcess, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $3AA55D, $6BD08B, $FAFAFB, $FAFAFB, "Start", "h")
 		UITK::Disable(ButtonProcess, #True)
 		CloseGadgetList()
 		
@@ -761,8 +770,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 164
-; FirstLine = 84
-; Folding = t2AAAI9
+; CursorPosition = 336
+; Folding = tBAAAA9
 ; EnableXP
 ; DPIAware

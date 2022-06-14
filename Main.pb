@@ -1,7 +1,6 @@
 ﻿IncludeFile "UI-Toolkit/Library/UI-Toolkit.pbi"
 
 IncludePath "Includes"
-IncludeFile "Filters.pbi"
 IncludeFile "General.pbi"
 IncludeFile "MainWindow.pbi"
 IncludeFile "Tasks.pbi"
@@ -10,7 +9,7 @@ IncludeFile "Preview.pbi"
 If CountProgramParameters()
 	Select ProgramParameter(0)
 		Case "-Preview"
-; 			Preview::Worker()
+			
 		Case "-Portable"
 			General::Portable = #True
 	EndSelect
@@ -27,6 +26,6 @@ Repeat
 	EndSelect
 ForEver
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 10
+; CursorPosition = 11
 ; EnableXP
 ; DPIAware
