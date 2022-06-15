@@ -8,11 +8,24 @@
 	Global NewList ThreadedQueue.Queue(), ThreadID, ThreadInterupt, ThreadCallback, ThreadEndEvent
 	
 	Enumeration ;Language
+		#lng_NoSetting_Title
+		#lng_NoSetting_Description
+		
 		#lng_ColorBalance_Red
 		#lng_ColorBalance_Green
 		#lng_ColorBalance_Blue
 		
 		#lng_AlphaThreshold_Value
+		
+		#lng_ChannelSwap_Red
+		#lng_ChannelSwap_Green
+		#lng_ChannelSwap_Blue
+		#lng_ChannelSwap_Alpha
+		#lng_ChannelSwap_ChannelRed
+		#lng_ChannelSwap_ChannelGreen
+		#lng_ChannelSwap_ChannelBlue
+		#lng_ChannelSwap_ChannelAlpha
+		
 		
 		#__lng_count
 	EndEnumeration
@@ -116,7 +129,7 @@
 	;}
 	
 	; Tasks
-	
+	;{ Language
 	Select General::Language
 		Case "français"
 			Restore French:
@@ -125,6 +138,9 @@
 	EndSelect
 	
 	Read.s Language(0); Ignore the first entry
+	Read.s Language(#lng_NoSetting_Title)
+	Read.s Language(#lng_NoSetting_Description)
+	;}
 	
 	;{ Color Balance
 	Structure ColorBalance_Settings
@@ -306,12 +322,292 @@
 	PokeA(Task(#Task_AlphaThreshold)\DefaultSettings, 128)
 	;}
 	
+	;{ Channel Swap
+	Structure ChannelSwap_Settings
+		Red.a
+		Green.a
+		Blue.a
+		Alpha.a
+	EndStructure
+	
+	Structure ChannelSwap_FilterSettings Extends ChannelSwap_Settings
+		Channel.a[4]
+	EndStructure
+	
+	Global ChannelSwap_Icon_Red, ChannelSwap_Icon_Green, ChannelSwap_Icon_Blue, ChannelSwap_Icon_Alpha
+	
+	ChannelSwap_Icon_Red = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Red))
+	ChannelSwap_Icon_Green = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Green))
+	ChannelSwap_Icon_Blue = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Blue))
+	ChannelSwap_Icon_Alpha = ImageID(CatchImage(#PB_Any, ?ChannelSwap_Alpha))
+	
+	Procedure ChannelSwap_RedComboHandler()
+		Protected *Settings.ChannelSwap_Settings = *CurrentSettings
+		*Settings\Red = GetGadgetState(EventGadget())
+		Preview::Update()
+	EndProcedure
+	
+	Procedure ChannelSwap_GreenComboHandler()
+		Protected *Settings.ChannelSwap_Settings = *CurrentSettings
+		*Settings\Green = GetGadgetState(EventGadget())
+		Preview::Update()
+	EndProcedure
+	
+	Procedure ChannelSwap_BlueComboHandler()
+		Protected *Settings.ChannelSwap_Settings = *CurrentSettings
+		*Settings\Blue = GetGadgetState(EventGadget())
+		Preview::Update()
+	EndProcedure
+	
+	Procedure ChannelSwap_AlphaComboHandler()
+		Protected *Settings.ChannelSwap_Settings = *CurrentSettings
+		*Settings\Alpha = GetGadgetState(EventGadget())
+		Preview::Update()
+	EndProcedure
+	
+	Procedure ChannelSwap_Populate(*Settings.ChannelSwap_Settings)
+		*CurrentSettings = *Settings
+		
+		GadgetMap("Red Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, Language(#lng_ChannelSwap_ChannelRed))
+		SetTitleColor(GadgetMap("Red Text"))
+		GadgetMap("Red Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 30)
+		SetComboColor(GadgetMap("Red Combo"))
+		AddGadgetItem(GadgetMap("Red Combo"), -1, Language(#lng_ChannelSwap_Red), ChannelSwap_Icon_Red)
+		AddGadgetItem(GadgetMap("Red Combo"), -1, Language(#lng_ChannelSwap_Green), ChannelSwap_Icon_Green)
+		AddGadgetItem(GadgetMap("Red Combo"), -1, Language(#lng_ChannelSwap_Blue), ChannelSwap_Icon_Blue)
+		AddGadgetItem(GadgetMap("Red Combo"), -1, Language(#lng_ChannelSwap_Alpha), ChannelSwap_Icon_Alpha)
+		BindGadgetEvent(GadgetMap("Red Combo"), @ChannelSwap_RedComboHandler(), #PB_EventType_Change)
+		SetGadgetState(GadgetMap("Red Combo"), *Settings\Red)
+		
+		GadgetMap("Green Text") = TextGadget(#PB_Any, #Margin, #Margin + 65, MainWindow::TaskContainerGadgetWidth, 15, Language(#lng_ChannelSwap_ChannelGreen))
+		SetTitleColor(GadgetMap("Green Text"))
+		GadgetMap("Green Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 85, MainWindow::TaskContainerGadgetWidth, 30)
+		SetComboColor(GadgetMap("Green Combo"))
+		AddGadgetItem(GadgetMap("Green Combo"), -1, Language(#lng_ChannelSwap_Red), ChannelSwap_Icon_Red)
+		AddGadgetItem(GadgetMap("Green Combo"), -1, Language(#lng_ChannelSwap_Green), ChannelSwap_Icon_Green)
+		AddGadgetItem(GadgetMap("Green Combo"), -1, Language(#lng_ChannelSwap_Blue), ChannelSwap_Icon_Blue)
+		AddGadgetItem(GadgetMap("Green Combo"), -1, Language(#lng_ChannelSwap_Alpha), ChannelSwap_Icon_Alpha)
+		BindGadgetEvent(GadgetMap("Green Combo"), @ChannelSwap_GreenComboHandler(), #PB_EventType_Change)
+		SetGadgetState(GadgetMap("Green Combo"), *Settings\Green)
+		
+		GadgetMap("Blue Text") = TextGadget(#PB_Any, #Margin, #Margin + 130, MainWindow::TaskContainerGadgetWidth, 15, Language(#lng_ChannelSwap_ChannelBlue))
+		SetTitleColor(GadgetMap("Blue Text"))
+		GadgetMap("Blue Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 150, MainWindow::TaskContainerGadgetWidth, 30)
+		SetComboColor(GadgetMap("Blue Combo"))
+		AddGadgetItem(GadgetMap("Blue Combo"), -1, Language(#lng_ChannelSwap_Red), ChannelSwap_Icon_Red)
+		AddGadgetItem(GadgetMap("Blue Combo"), -1, Language(#lng_ChannelSwap_Green), ChannelSwap_Icon_Green)
+		AddGadgetItem(GadgetMap("Blue Combo"), -1, Language(#lng_ChannelSwap_Blue), ChannelSwap_Icon_Blue)
+		AddGadgetItem(GadgetMap("Blue Combo"), -1, Language(#lng_ChannelSwap_Alpha), ChannelSwap_Icon_Alpha)
+		BindGadgetEvent(GadgetMap("Blue Combo"), @ChannelSwap_BlueComboHandler(), #PB_EventType_Change)
+		SetGadgetState(GadgetMap("Blue Combo"), *Settings\Blue)
+		
+		GadgetMap("Alpha Text") = TextGadget(#PB_Any, #Margin, #Margin + 195, MainWindow::TaskContainerGadgetWidth, 15, Language(#lng_ChannelSwap_ChannelAlpha))
+		SetTitleColor(GadgetMap("Alpha Text"))
+		GadgetMap("Alpha Combo") = UITK::Combo(#PB_Any, #Margin, #Margin + 215, MainWindow::TaskContainerGadgetWidth, 30)
+		SetComboColor(GadgetMap("Alpha Combo"))
+		AddGadgetItem(GadgetMap("Alpha Combo"), -1, Language(#lng_ChannelSwap_Red), ChannelSwap_Icon_Red)
+		AddGadgetItem(GadgetMap("Alpha Combo"), -1, Language(#lng_ChannelSwap_Green), ChannelSwap_Icon_Green)
+		AddGadgetItem(GadgetMap("Alpha Combo"), -1, Language(#lng_ChannelSwap_Blue), ChannelSwap_Icon_Blue)
+		AddGadgetItem(GadgetMap("Alpha Combo"), -1, Language(#lng_ChannelSwap_Alpha), ChannelSwap_Icon_Alpha)
+		BindGadgetEvent(GadgetMap("Alpha Combo"), @ChannelSwap_AlphaComboHandler(), #PB_EventType_Change)
+		SetGadgetState(GadgetMap("Alpha Combo"), *Settings\Alpha)
+		
+	EndProcedure
+	
+	Procedure ChannelSwap_CleanUp()
+		FreeGadget(GadgetMap("Red Text"))
+		BindGadgetEvent(GadgetMap("Red Combo"), @ChannelSwap_RedComboHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Red Combo"))
+		
+		FreeGadget(GadgetMap("Green Text"))
+		BindGadgetEvent(GadgetMap("Green Combo"), @ChannelSwap_GreenComboHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Green Combo"))
+		
+		FreeGadget(GadgetMap("Blue Text"))
+		BindGadgetEvent(GadgetMap("Blue Combo"), @ChannelSwap_BlueComboHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Blue Combo"))
+		
+		FreeGadget(GadgetMap("Alpha Text"))
+		BindGadgetEvent(GadgetMap("Alpha Combo"), @ChannelSwap_AlphaComboHandler(), #PB_EventType_Change)
+		FreeGadget(GadgetMap("Alpha Combo"))
+		
+		ClearMap(GadgetMap())
+	EndProcedure
+	
+	Procedure ChannelSwap_Serialize(*Settings.ChannelSwap_Settings)
+		
+	EndProcedure
+	
+	Procedure ChannelSwap_CustomCallback(x, y, SourceColor, TargetColor)
+		Protected *Settings.ChannelSwap_FilterSettings = *CustomCallbackSettings
+		*Settings\Channel[0] = Red(SourceColor)
+		*Settings\Channel[1] = Green(SourceColor)
+		*Settings\Channel[2] = Blue(SourceColor)
+		*Settings\Channel[3] = Alpha(SourceColor)
+		
+		ProcedureReturn RGBA(*Settings\Channel[*Settings\Red], *Settings\Channel[*Settings\Green], *Settings\Channel[*Settings\Blue], *Settings\Channel[*Settings\Alpha])
+	EndProcedure
+	
+	Procedure ChannelSwap_Execute(Image, *Settings.ChannelSwap_Settings)
+		Protected FilterSettings.ChannelSwap_FilterSettings
+		FilterSettings\Red = *Settings\Red
+		FilterSettings\Green = *Settings\Green
+		FilterSettings\Blue = *Settings\Blue
+		FilterSettings\Alpha = *Settings\Alpha
+		*CustomCallbackSettings = @FilterSettings
+		StartDrawing(ImageOutput(Image))
+		DrawingMode(#PB_2DDrawing_CustomFilter)
+		CustomFilterCallback(@ChannelSwap_CustomCallback())
+		DrawAlphaImage(ImageID(Image), 0, 0)
+		StopDrawing()
+		ProcedureReturn SizeOf(ChannelSwap_Settings)
+	EndProcedure
+	
+	Task(#Task_ChannelSwap)\Type = MainWindow::#TaskType_Colors
+	FillList(ChannelSwap)
+	
+	Read.s Language(#lng_ChannelSwap_Red)
+	Read.s Language(#lng_ChannelSwap_Green)
+	Read.s Language(#lng_ChannelSwap_Blue)
+	Read.s Language(#lng_ChannelSwap_Alpha)
+	Read.s Language(#lng_ChannelSwap_ChannelRed)
+	Read.s Language(#lng_ChannelSwap_ChannelGreen)
+	Read.s Language(#lng_ChannelSwap_ChannelBlue)
+	Read.s Language(#lng_ChannelSwap_ChannelAlpha)
+	
+	PokeA(Task(#Task_ChannelSwap)\DefaultSettings, 0)
+	PokeA(Task(#Task_ChannelSwap)\DefaultSettings + OffsetOf(ChannelSwap_Settings\Green), 1)
+	PokeA(Task(#Task_ChannelSwap)\DefaultSettings + OffsetOf(ChannelSwap_Settings\Blue), 2)
+	PokeA(Task(#Task_ChannelSwap)\DefaultSettings + OffsetOf(ChannelSwap_Settings\Alpha), 3)
+	;}
+	
+	;{ Invert Color
+	Structure Invertcolor_Settings
+		Null.a
+	EndStructure
+	
+	Procedure Invertcolor_Populate(*Settings.Invertcolor_Settings)
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, Language(#lng_NoSetting_Title))
+		SetTitleColor(GadgetMap("Title Text"))
+		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, Language(#lng_NoSetting_Description))
+		SetTextColor(GadgetMap("Description Text"))
+	EndProcedure
+	
+	Procedure Invertcolor_CleanUp()
+		FreeGadget(GadgetMap("Title Text"))
+		FreeGadget(GadgetMap("Description Text"))
+		ClearMap(GadgetMap())
+	EndProcedure
+	
+	Procedure Invertcolor_Serialize(*Settings.Invertcolor_Settings)
+		
+	EndProcedure
+	
+	Procedure Invertcolor_CustomCallback(x, y, SourceColor, TargetColor)
+		ProcedureReturn RGBA(255 - Red(SourceColor), 255 - Green(SourceColor), 255 - Blue(SourceColor), Alpha(SourceColor))
+	EndProcedure
+	
+	Procedure Invertcolor_Execute(Image, *Settings)
+		StartDrawing(ImageOutput(Image))
+		DrawingMode(#PB_2DDrawing_CustomFilter)
+		CustomFilterCallback(@Invertcolor_CustomCallback())
+		DrawAlphaImage(ImageID(Image), 0, 0)
+		StopDrawing()
+		ProcedureReturn SizeOf(Invertcolor_Settings)
+	EndProcedure
+	
+	Task(#Task_InvertColor)\Type = MainWindow::#TaskType_Colors
+	FillList(Invertcolor)
+	;}
+	
+	;{ Black & White
+	Structure BlackAndWhite_Settings
+		Null.a
+	EndStructure
+	
+	Procedure BlackAndWhite_Populate(*Settings.BlackAndWhite_Settings)
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, Language(#lng_NoSetting_Title))
+		SetTitleColor(GadgetMap("Title Text"))
+		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, Language(#lng_NoSetting_Description))
+		SetTextColor(GadgetMap("Description Text"))
+	EndProcedure
+	
+	Procedure BlackAndWhite_CleanUp()
+		FreeGadget(GadgetMap("Title Text"))
+		FreeGadget(GadgetMap("Description Text"))
+		ClearMap(GadgetMap())
+	EndProcedure
+	
+	Procedure BlackAndWhite_Serialize(*Settings.BlackAndWhite_Settings)
+		
+	EndProcedure
+	
+	Procedure BlackAndWhite_CustomCallback(x, y, SourceColor, TargetColor)
+		Protected Color.a = Round((Red(SourceColor) * 0.2989 + Green(SourceColor) * 0.5870 + Blue(SourceColor) * 0.1140), #PB_Round_Down)
+		ProcedureReturn RGBA(Color, Color, Color, Alpha(SourceColor))
+	EndProcedure
+	
+	Procedure BlackAndWhite_Execute(Image, *Settings)
+		StartDrawing(ImageOutput(Image))
+		DrawingMode(#PB_2DDrawing_CustomFilter)
+		CustomFilterCallback(@BlackAndWhite_CustomCallback())
+		DrawAlphaImage(ImageID(Image), 0, 0)
+		StopDrawing()
+		ProcedureReturn SizeOf(BlackAndWhite_Settings)
+	EndProcedure
+	
+	Task(#Task_BlackAndWhite)\Type = MainWindow::#TaskType_Colors
+	FillList(BlackAndWhite)
+	;}
+	
+	;{ Sepia
+	Structure Sepia_Settings
+		Null.a
+	EndStructure
+	
+	Procedure Sepia_Populate(*Settings.Sepia_Settings)
+		GadgetMap("Title Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, Language(#lng_NoSetting_Title))
+		SetTitleColor(GadgetMap("Title Text"))
+		GadgetMap("Description Text") = TextGadget(#PB_Any, #Margin, #Margin + 20, MainWindow::TaskContainerWidth - #Margin * 2, 45, Language(#lng_NoSetting_Description))
+		SetTextColor(GadgetMap("Description Text"))
+	EndProcedure
+	
+	Procedure Sepia_CleanUp()
+		FreeGadget(GadgetMap("Title Text"))
+		FreeGadget(GadgetMap("Description Text"))
+		ClearMap(GadgetMap())
+	EndProcedure
+	
+	Procedure Sepia_Serialize(*Settings.Sepia_Settings)
+		
+	EndProcedure
+	
+	Procedure Sepia_CustomCallback(x, y, SourceColor, TargetColor)
+		
+		ProcedureReturn RGBA(General::Min((Red(SourceColor) * 0.393 + Green(SourceColor) * 0.769 + Blue(SourceColor) * 0.189), 255),
+		                     General::Min((Red(SourceColor) * 0.349 + Green(SourceColor) * 0.686 + Blue(SourceColor) * 0.168), 255), 
+		                     General::Min((Red(SourceColor) * 0.272 + Green(SourceColor) * 0.534 + Blue(SourceColor) * 0.131), 255), Alpha(SourceColor))
+	EndProcedure
+	
+	Procedure Sepia_Execute(Image, *Settings)
+		StartDrawing(ImageOutput(Image))
+		DrawingMode(#PB_2DDrawing_CustomFilter)
+		CustomFilterCallback(@Sepia_CustomCallback())
+		DrawAlphaImage(ImageID(Image), 0, 0)
+		StopDrawing()
+		ProcedureReturn SizeOf(Sepia_Settings)
+	EndProcedure
+	
+	Task(#Task_Sepia)\Type = MainWindow::#TaskType_Colors
+	FillList(Sepia)
+	;}
+	
 	DataSection ;{
 		English:
-		IncludeFile "../Language/Tasks/English.txt"
+		IncludeFile "../Language/Tasks/English.pb"
 		
 		French:
-		IncludeFile "../Language/Tasks/Français.txt"
+		IncludeFile "../Language/Tasks/Français.pb"
 		
 		BlackAndWhite:
 		IncludeBinary "../Media/Tinified/Black & White.png"
@@ -339,6 +635,9 @@
 		
 		ColorBalance:
 		IncludeBinary "../Media/Tinified/Color Balance.png"
+		
+		Sepia:
+		IncludeBinary "../Media/Tinified/Sepia.png"
 		
 		Crop:
 		IncludeBinary "../Media/Tinified/Crop.png"
@@ -404,8 +703,8 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 98
-; FirstLine = 21
-; Folding = pNAAE9
+; CursorPosition = 588
+; FirstLine = 49
+; Folding = hNAAAAAAI--
 ; EnableXP
 ; DPIAware

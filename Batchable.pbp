@@ -9,16 +9,16 @@
   <section name="data">
     <explorer view="C:\ProgramData\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2022-06-15 02:18" user="❤x1" host="MONSTRO"/>
+    <lastopen date="2022-06-15 22:08" user="❤x1" host="MONSTRO"/>
   </section>
   <section name="files">
     <file name="Includes\General.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="2dbcbfd965b599d86663922ea9ac7136"/>
+      <fingerprint md5="cd778fc7956972650a4bf8ce9077a4c8"/>
     </file>
     <file name="Includes\MainWindow.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="1958c4ff4916ce17f62f6ac866dc0298"/>
+      <fingerprint md5="18f32a9245197c945b817ef9ef5248c5"/>
     </file>
     <file name="Includes\Preview.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
@@ -26,11 +26,11 @@
     </file>
     <file name="Includes\Tasks.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="7c3bbfb39f6c4944ebaa60ad5a4dc5d7"/>
+      <fingerprint md5="e43653fc52d1da2de6a4e10e5d341b6d"/>
     </file>
     <file name="Main.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
-      <fingerprint md5="2216f2468ad4bb136baa71f39c3860d4"/>
+      <fingerprint md5="e55646564c72bda7dbda5ee00d56b569"/>
     </file>
     <file name="UI-Toolkit\Library\UI-Toolkit.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="+++"/>
@@ -43,7 +43,7 @@
       <outputfile value="Batchable.exe"/>
       <compiler version="PureBasic 6.00 Beta 9 (Windows - x64)"/>
       <executable value="Batchable.exe"/>
-      <options thread="1" xpskin="1" optimizer="1"/>
+      <options thread="1" xpskin="1" debug="1" optimizer="1"/>
       <icon enable="1">Media\Icon.ico</icon>
       <format exe="default" cpu="5"/>
       <versioninfo enable="1">

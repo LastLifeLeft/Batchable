@@ -550,6 +550,7 @@
 	
 	Procedure Handler_SetupTask()
 		Protected *Data.TaskListInfo = GetGadgetItemData(TaskList, GetGadgetState(TaskList))
+		UseGadgetList(WindowID(Window))
 		OpenGadgetList(TaskSettingContainer)
 		Tasks::Task(*Data\TaskID)\Populate(*Data\TaskSettings)
 		CloseGadgetList()
@@ -788,10 +789,10 @@
 		IncludeBinary "../Media/Icon/Icon18.png"
 		
 		English:
-		IncludeFile "../Language/MainWindow/English.txt"
+		IncludeFile "../Language/MainWindow/English.pb"
 		
 		French:
-		IncludeFile "../Language/MainWindow/Français.txt"
+		IncludeFile "../Language/MainWindow/Français.pb"
 		
 	EndDataSection
 EndModule
@@ -830,8 +831,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 788
-; FirstLine = 12
+; CursorPosition = 552
 ; Folding = thAAAA9
 ; EnableXP
 ; DPIAware

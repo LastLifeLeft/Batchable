@@ -50,11 +50,12 @@ DeclareModule Tasks
 	Enumeration ;Tasks
 		#Task_ColorBalance
 		#Task_AlphaThreshold
+		#Task_ChannelSwap
+		#Task_InvertColor
+		#Task_BlackAndWhite
+		#Task_Sepia
 		
-; 		#Task_ChannelSwap
 ; 		#Task_ChannelDisplacement
-; 		#Task_InvertColor
-; 		#Task_BlackAndWhite
 ; 		#Task_Posterization
 ; 		#Task_Outline
 ; 		#Task_TrimImage
@@ -129,6 +130,7 @@ Module General
 	
 	Select Language
 		Case "français"
+			
 		Default
  			Language = "english"
 	EndSelect
@@ -154,7 +156,8 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 3
+; CursorPosition = 84
+; FirstLine = 42
 ; Folding = 09
 ; EnableXP
 ; DPIAware

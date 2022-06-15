@@ -25,7 +25,9 @@ Repeat
 			EndIf
 	EndSelect
 ForEver
+
+
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 11
+; CursorPosition = 7
 ; EnableXP
 ; DPIAware
