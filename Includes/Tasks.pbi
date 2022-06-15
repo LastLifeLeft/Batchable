@@ -7,6 +7,19 @@
 	Global NewMap GadgetMap()
 	Global NewList ThreadedQueue.Queue(), ThreadID, ThreadInterupt, ThreadCallback, ThreadEndEvent
 	
+	Enumeration ;Language
+		#lng_ColorBalance_Red
+		#lng_ColorBalance_Green
+		#lng_ColorBalance_Blue
+		
+		#lng_AlphaThreshold_Value
+		
+		#__lng_count
+	EndEnumeration
+	
+	Global Dim Language.s(#__lng_count - 1)
+	
+	
 	; private procedures declaration
 	Declare ProcessThread(Image)
 	
@@ -91,6 +104,8 @@
 	EndProcedure
 	
 	Macro FillList(TaskName)
+		Read.s Task(#Task_#TaskName)\Name
+		Read.s Task(#Task_#TaskName)\Description
 		Task(#Task_#TaskName)\IconID = ImageID(CatchImage(#PB_Any, ?TaskName))
 		Task(#Task_#TaskName)\Populate = @TaskName#_Populate()
 		Task(#Task_#TaskName)\CleanUp = @TaskName#_CleanUp()
@@ -101,6 +116,15 @@
 	;}
 	
 	; Tasks
+	
+	Select General::Language
+		Case "français"
+			Restore French:
+		Default
+			Restore English:
+	EndSelect
+	
+	Read.s Language(0); Ignore the first entry
 	
 	;{ Color Balance
 	Structure ColorBalance_Settings
@@ -136,7 +160,7 @@
 	Procedure ColorBalance_Populate(*Settings.ColorBalance_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Red Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Red:")
+		GadgetMap("Red Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, Language(#lng_ColorBalance_Red))
 		SetTitleColor(GadgetMap("Red Text"))
 		GadgetMap("Red Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, -255, 255, UITK::#Trackbar_ShowState)
 		AddGadgetItem(GadgetMap("Red Trackbar"), 0, "")
@@ -145,7 +169,7 @@
 		SetGadgetState(GadgetMap("Red Trackbar"), *Settings\Red - 255)
 		BindGadgetEvent(GadgetMap("Red Trackbar"), @ColorBalance_RedTrackBarHandler(), #PB_EventType_Change)
 		
-		GadgetMap("Green Text") = TextGadget(#PB_Any, #Margin, #Margin + 75, MainWindow::TaskContainerGadgetWidth, 15, "Green:")
+		GadgetMap("Green Text") = TextGadget(#PB_Any, #Margin, #Margin + 75, MainWindow::TaskContainerGadgetWidth, 15, Language(#lng_ColorBalance_Green))
 		SetTitleColor(GadgetMap("Green Text"))
 		GadgetMap("Green Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 95, MainWindow::TaskContainerGadgetWidth, 40, -255, 255, UITK::#Trackbar_ShowState)
 		AddGadgetItem(GadgetMap("Green Trackbar"), 0, "")
@@ -154,7 +178,7 @@
 		SetGadgetState(GadgetMap("Green Trackbar"), *Settings\Green - 255)
 		BindGadgetEvent(GadgetMap("Green Trackbar"), @ColorBalance_GreenTrackBarHandler(), #PB_EventType_Change)
 		
-		GadgetMap("Blue Text") = TextGadget(#PB_Any, #Margin, #Margin + 150, MainWindow::TaskContainerGadgetWidth, 15, "Blue:")
+		GadgetMap("Blue Text") = TextGadget(#PB_Any, #Margin, #Margin + 150, MainWindow::TaskContainerGadgetWidth, 15, Language(#lng_ColorBalance_Blue))
 		SetTitleColor(GadgetMap("Blue Text"))
 		GadgetMap("Blue Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 170, MainWindow::TaskContainerGadgetWidth, 40, -255, 255, UITK::#Trackbar_ShowState)
 		AddGadgetItem(GadgetMap("Blue Trackbar"), 0, "")
@@ -215,10 +239,13 @@
 		ProcedureReturn SizeOf(ColorBalance_Settings)
 	EndProcedure
 	
-	Task(#Task_ColorBalance)\Name = "Color Balance"
-	Task(#Task_ColorBalance)\Description = "Change the global adjustment of the intensities of the colors."
 	Task(#Task_ColorBalance)\Type = MainWindow::#TaskType_Colors
 	FillList(ColorBalance)
+	
+	Read.s Language(#lng_ColorBalance_Red)
+	Read.s Language(#lng_ColorBalance_Green)
+	Read.s Language(#lng_ColorBalance_Blue)
+	
 	PokeC(Task(#Task_ColorBalance)\DefaultSettings, 255)
 	PokeC(Task(#Task_ColorBalance)\DefaultSettings + SizeOf(Character), 255)
 	PokeC(Task(#Task_ColorBalance)\DefaultSettings + SizeOf(Character) * 2, 255)
@@ -238,7 +265,7 @@
 	Procedure AlphaThreshold_Populate(*Settings.AlphaThreshold_Settings)
 		*CurrentSettings = *Settings
 		
-		GadgetMap("Threshold Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, "Threshold value:")
+		GadgetMap("Threshold Text") = TextGadget(#PB_Any, #Margin, #Margin, MainWindow::TaskContainerGadgetWidth, 15, Language(#lng_AlphaThreshold_Value))
 		SetTitleColor(GadgetMap("Threshold Text"))
 		
 		GadgetMap("Threshold Trackbar") = UITK::TrackBar(#PB_Any,#Margin, #Margin + 20, MainWindow::TaskContainerGadgetWidth, 40, 0, 255, UITK::#Trackbar_ShowState)
@@ -273,14 +300,19 @@
 		ProcedureReturn SizeOf(AlphaThreshold_Settings)
 	EndProcedure
 	
-	Task(#Task_AlphaThreshold)\Name = "Alpha Threshold"
-	Task(#Task_AlphaThreshold)\Description = "Remove gradation to alpha transparency according to a given value."
 	Task(#Task_AlphaThreshold)\Type = MainWindow::#TaskType_Colors
 	FillList(AlphaThreshold)
+	Read.s Language(#lng_AlphaThreshold_Value)
 	PokeA(Task(#Task_AlphaThreshold)\DefaultSettings, 128)
 	;}
 	
 	DataSection ;{
+		English:
+		IncludeFile "../Language/Tasks/English.txt"
+		
+		French:
+		IncludeFile "../Language/Tasks/Français.txt"
+		
 		BlackAndWhite:
 		IncludeBinary "../Media/Tinified/Black & White.png"
 		
@@ -372,8 +404,8 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 267
-; FirstLine = 51
-; Folding = hNIgx0
+; CursorPosition = 98
+; FirstLine = 21
+; Folding = pNAAE9
 ; EnableXP
 ; DPIAware

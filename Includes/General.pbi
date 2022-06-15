@@ -1,7 +1,7 @@
 ﻿DeclareModule General
 	#AppName = "Batchable"
 	
-	Global ColorMode = UITK::#DarkMode, Portable = #False
+	Global ColorMode = UITK::#DarkMode, Portable = #False, Language.s
 	
 	; Public procedure declarations
 	Declare Min(A, B)
@@ -122,6 +122,17 @@ Module General
 	UseTGAImageDecoder()
 	UseTIFFImageDecoder()
 	
+	Global cchData
+	cchData = GetLocaleInfo_(#LOCALE_USER_DEFAULT, #LOCALE_SNATIVELANGNAME, @Language, 0)
+	Language = Space(cchData)
+	GetLocaleInfo_(#LOCALE_USER_DEFAULT, #LOCALE_SNATIVELANGNAME, @Language, cchData)
+	
+	Select Language
+		Case "français"
+		Default
+ 			Language = "english"
+	EndSelect
+	
 	;{ Public procedures
 	Procedure Min(A, B)
 		If A > B
@@ -143,7 +154,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 52
-; Folding = N9
+; CursorPosition = 3
+; Folding = 09
 ; EnableXP
 ; DPIAware

@@ -9,24 +9,24 @@
   <section name="data">
     <explorer view="C:\ProgramData\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2022-06-15 00:06" user="❤x1" host="MONSTRO"/>
+    <lastopen date="2022-06-15 02:18" user="❤x1" host="MONSTRO"/>
   </section>
   <section name="files">
     <file name="Includes\General.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="409b6e276ce1220813dc922719f15170"/>
+      <fingerprint md5="2dbcbfd965b599d86663922ea9ac7136"/>
     </file>
     <file name="Includes\MainWindow.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="280eb2b38f62448b9ca492190ce333d1"/>
+      <fingerprint md5="1958c4ff4916ce17f62f6ac866dc0298"/>
     </file>
     <file name="Includes\Preview.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="0860962bf8901c18e0966d1e8145d9ba"/>
+      <fingerprint md5="6922dd74fe943a2351db3388d6e329b6"/>
     </file>
     <file name="Includes\Tasks.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="b8c3b6aee80f1d1326e5d94c6bafc074"/>
+      <fingerprint md5="7c3bbfb39f6c4944ebaa60ad5a4dc5d7"/>
     </file>
     <file name="Main.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>

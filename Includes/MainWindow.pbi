@@ -73,12 +73,52 @@
 		*Data.OriginalImageInfo
 	EndStructure
 	
+	Enumeration ;Language
+		#lng_AddImages
+		#lng_AddFolder
+		#lng_RemoveImage
+		
+		#lng_AddTask
+		#lng_TaskSettings
+		#lng_RemoveTask
+		#lng_Process
+		
+		#lng_TaskType_All
+		#lng_TaskType_Colors
+		#lng_TaskType_Transformation
+		#lng_TaskType_PixelArt
+		#lng_TaskType_Other
+		
+		#lng_Menu_Files
+		#lng_Menu_Preferences
+		#lng_Menu_Exit
+		
+		#lng_Menu_Tasks
+		#lng_Menu_LoadTasksList
+		#lng_Menu_SaveTasksList
+		#lng_Menu_DisplayPreview
+		
+		#lng_Menu_Help
+		#lng_Menu_About
+		#lng_Menu_Guide
+		#lng_Menu_Website
+		
+		#lng_Cancel
+		#lng_AddtoQueue
+		#lng_Back
+		
+		#lng_Error_Loading
+		
+		#__lng_size
+	EndEnumeration
+	
 	Global ImageList, ImageContainer, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, TaskContainer, ButtonAddTask, ButtonSetupTask, ButtonRemoveTask, ButtonProcess, NewTaskContainer, NewTaskReturnButton, NewTaskCombo, NewTaskList, NewTaskButton
 	Global TaskSettingContainer, TaskSettingReturnButton, NewList TaskSettingList()
 	Global BoldFont = FontID(LoadFont(#PB_Any, "Segoe UI", 9, #PB_Font_HighQuality | #PB_Font_Bold))
 	Global ImageLoading, ImageError, ImageLoadingID
 	Global PreviewMutex, MiniatureThreat, NewList PreviewList.PreviewLoading()
 	Global Menu, PreviewCheckerboard
+	Global Dim Language.s(#__lng_size - 1)
 	
 	#SupportedFileTypes = "jpgjpegpngbmptifftga"
 	
@@ -165,17 +205,30 @@
 	
 	; Public procedures
 	Procedure Open()
-		Protected LoopX, LoopY, TempImage
+		Protected Loop, TempImage
 		
 		PreviewCheckerboard = CreateImage(#PB_Any, 128, 128, 24, FixColor($FFFFFF))
 		StartVectorDrawing(ImageVectorOutput(PreviewCheckerboard))
-		For LoopX = 0 To 128 Step 16
-			AddPathBox(LoopX, 0, 8, 128)
-			AddPathBox(0, LoopX, 128, 8)
+		For Loop = 0 To 128 Step 16
+			AddPathBox(Loop, 0, 8, 128)
+			AddPathBox(0, Loop, 128, 8)
 		Next
 		VectorSourceColor(SetAlpha($BFBFBF, 255))
 		FillPath()
 		StopVectorDrawing()
+		
+		Select General::Language
+			Case "français"
+				Restore French:
+			Default
+				Restore English:
+		EndSelect
+		
+		Read.s Language(0); Ignore the first entry
+		
+		For Loop = #lng_AddImages To #__lng_size - 1
+			Read.s Language(Loop)
+		Next
 		
 		Window = UITK::Window(#PB_Any, 0, 0, #Window_Width, #Window_Height, General::#AppName, General::ColorMode | UITK::#Window_CloseButton | #PB_Window_ScreenCentered | #PB_Window_Invisible)
 		BindEvent(#PB_Event_CloseWindow, @Handler_Close(), Window)
@@ -194,15 +247,15 @@
 		BindGadgetEvent(ImageList, @Handler_ImageList_Keyboard(), #PB_EventType_KeyDown)
 		
 		ButtonAddImage = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
-		SetButtonColor(ButtonAddImage, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add images...", "a")
+		SetButtonColor(ButtonAddImage, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, Language(#lng_AddImages), "a")
 		BindGadgetEvent(ButtonAddImage, @Handler_AddImage(), #PB_EventType_Change)
 		
 		ButtonAddFolder = UITK::Button(#PB_Any, #Iconbar_Offset * 2 + #Iconbar_Size, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
-		SetButtonColor(ButtonAddFolder, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add folder...", "c")
+		SetButtonColor(ButtonAddFolder, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, Language(#lng_AddFolder), "c")
 		BindGadgetEvent(ButtonAddFolder, @Handler_AddFolder(), #PB_EventType_Change)
 		
 		ButtonRemoveImage = UITK::Button(#PB_Any, #Iconbar_Offset * 3 + #Iconbar_Size * 2, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
-		SetButtonColor(ButtonRemoveImage, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $D83C3E, $E06365, $FAFAFB, $FAFAFB, "Remove selected image", "b")
+		SetButtonColor(ButtonRemoveImage, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $D83C3E, $E06365, $FAFAFB, $FAFAFB, Language(#lng_RemoveImage), "b")
 		BindGadgetEvent(ButtonRemoveImage, @Handler_RemoveImage(), #PB_EventType_Change)
 		UITK::Disable(ButtonRemoveImage, #True)
 		CloseGadgetList()
@@ -218,21 +271,21 @@
 		BindGadgetEvent(TaskList, @Handler_TaskList_Keyboard(), #PB_EventType_KeyDown)
 		
 		ButtonAddTask = UITK::Button(#PB_Any, #Iconbar_Offset, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
-		SetButtonColor(ButtonAddTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Add Task...", "e")
+		SetButtonColor(ButtonAddTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, Language(#lng_AddTask), "e")
 		BindGadgetEvent(ButtonAddTask, @Handler_NewTask(), #PB_EventType_Change)
 		
 		ButtonSetupTask = UITK::Button(#PB_Any, #Iconbar_Offset * 2 + #Iconbar_Size, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
-		SetButtonColor(ButtonSetupTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, "Task settings...", "g")
+		SetButtonColor(ButtonSetupTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $5865F2, $7984F5, $FAFAFB, $FAFAFB, Language(#lng_TaskSettings), "g")
 		UITK::Disable(ButtonSetupTask, #True)
 		BindGadgetEvent(ButtonSetupTask, @Handler_SetupTask(), #PB_EventType_Change)
 		
 		ButtonRemoveTask = UITK::Button(#PB_Any, #Iconbar_Offset * 3 + #Iconbar_Size * 2, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
-		SetButtonColor(ButtonRemoveTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $D83C3E, $E06365, $FAFAFB, $FAFAFB, "Remove selected Task", "f")
+		SetButtonColor(ButtonRemoveTask, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $D83C3E, $E06365, $FAFAFB, $FAFAFB, Language(#lng_RemoveTask), "f")
 		UITK::Disable(ButtonRemoveTask, #True)
 		BindGadgetEvent(ButtonRemoveTask, @Handler_RemoveTask(), #PB_EventType_Change)
 		
 		ButtonProcess = UITK::Button(#PB_Any, #Iconbar_Offset * 4 + #Iconbar_Size * 3, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
-		SetButtonColor(ButtonProcess, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $3AA55D, $6BD08B, $FAFAFB, $FAFAFB, "Start", "h")
+		SetButtonColor(ButtonProcess, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $3AA55D, $6BD08B, $FAFAFB, $FAFAFB, Language(#lng_Process), "h")
 		UITK::Disable(ButtonProcess, #True)
 		CloseGadgetList()
 		
@@ -250,11 +303,11 @@
 		SetGadgetColor(NewTaskCombo, UITK::#Color_Parent, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
 		SetGadgetColor(NewTaskCombo, UITK::#Color_Back_Warm, SetAlpha(GetGadgetColor(NewTaskCombo, UITK::#Color_Back_Cold), 255))
 		
-		AddGadgetItem(NewTaskCombo, #TaskType_All, "All")
-		AddGadgetItem(NewTaskCombo, #TaskType_Colors, "Colors")
-		AddGadgetItem(NewTaskCombo, #TaskType_Transformation, "Transformation")
-		AddGadgetItem(NewTaskCombo, #TaskType_PixelArt, "Pixel Art")
-		AddGadgetItem(NewTaskCombo, #TaskType_Other, "Other")
+		AddGadgetItem(NewTaskCombo, #TaskType_All, Language(#lng_TaskType_All))
+		AddGadgetItem(NewTaskCombo, #TaskType_Colors, Language(#lng_TaskType_Colors))
+		AddGadgetItem(NewTaskCombo, #TaskType_Transformation, Language(#lng_TaskType_Transformation))
+		AddGadgetItem(NewTaskCombo, #TaskType_PixelArt, Language(#lng_TaskType_PixelArt))
+		AddGadgetItem(NewTaskCombo, #TaskType_Other, Language(#lng_TaskType_Other))
 		SetGadgetState(NewTaskCombo, 0)
 		BindGadgetEvent(NewTaskCombo, @Handler_NewTaskCombo(), #PB_EventType_Change)
 		
@@ -266,7 +319,7 @@
 		SetGadgetAttribute(NewTaskList, UITK::#Attribute_SortItems, #True)
 		Populate_TaskList(0)
 		
-		NewTaskReturnButton = UITK::Button(#PB_Any, TaskContainerWidth - 150 - #Iconbar_Offset, GadgetHeight(NewTaskContainer) - #Iconbar_Offset - #ButtonBack_Size, 150, #ButtonBack_Size, "Cancel", UITK::#Border)
+		NewTaskReturnButton = UITK::Button(#PB_Any, TaskContainerWidth - 150 - #Iconbar_Offset, GadgetHeight(NewTaskContainer) - #Iconbar_Offset - #ButtonBack_Size, 150, #ButtonBack_Size, Language(#lng_Cancel), UITK::#Border)
 		BindGadgetEvent(NewTaskReturnButton, @Handler_NewTaskReturn(), #PB_EventType_Change)
 		SetGadgetAttribute(NewTaskReturnButton, #PB_Canvas_Cursor, #PB_Cursor_Hand)
 		SetGadgetColor(NewTaskReturnButton, UITK::#Color_Parent, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
@@ -274,7 +327,7 @@
 		SetGadgetColor(NewTaskReturnButton, UITK::#Color_Back_Warm, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Warm), 255))
 		SetGadgetColor(NewTaskReturnButton, UITK::#Color_Back_Hot, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Hot), 255))
 		
-		NewTaskButton = UITK::Button(#PB_Any, TaskContainerWidth - 300 - #Iconbar_Offset * 2, GadgetHeight(NewTaskContainer) - #Iconbar_Offset - #ButtonBack_Size, 150, #ButtonBack_Size, "Add to the queue", UITK::#Border)
+		NewTaskButton = UITK::Button(#PB_Any, TaskContainerWidth - 300 - #Iconbar_Offset * 2, GadgetHeight(NewTaskContainer) - #Iconbar_Offset - #ButtonBack_Size, 150, #ButtonBack_Size, Language(#lng_AddtoQueue), UITK::#Border)
 		SetGadgetColor(NewTaskButton, UITK::#Color_Parent, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
 		SetGadgetColor(NewTaskButton, UITK::#Color_Back_Cold, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
 		SetGadgetColor(NewTaskButton, UITK::#Color_Back_Disabled, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
@@ -290,7 +343,7 @@
 		SetGadgetAttribute(TaskSettingContainer, UITK::#Attribute_CornerRadius, 5)
 		HideGadget(TaskSettingContainer, #True)
 		
-		TaskSettingReturnButton =  UITK::Button(#PB_Any, TaskContainerWidth - 100 - #Iconbar_Offset, GadgetHeight(NewTaskContainer) - #Iconbar_Offset - #ButtonBack_Size, 100, #ButtonBack_Size, "Back", UITK::#Border)
+		TaskSettingReturnButton =  UITK::Button(#PB_Any, TaskContainerWidth - 100 - #Iconbar_Offset, GadgetHeight(NewTaskContainer) - #Iconbar_Offset - #ButtonBack_Size, 100, #ButtonBack_Size, Language(#lng_Back), UITK::#Border)
  		BindGadgetEvent(TaskSettingReturnButton, @Handler_TaskSettingReturn(), #PB_EventType_Change)
 		SetGadgetAttribute(TaskSettingReturnButton, #PB_Canvas_Cursor, #PB_Cursor_Hand)
 		SetGadgetColor(TaskSettingReturnButton, UITK::#Color_Parent, SetAlpha(GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), 255))
@@ -301,26 +354,26 @@
 		CloseGadgetList()
 		
 		Menu = UITK::FlatMenu(General::ColorMode)
-		UITK::AddFlatMenuItem(Menu, #Menu_OpenImages, -1, "Add images")
-		UITK::AddFlatMenuItem(Menu, #Menu_OpenFolder, -1, "Add Folder")
+		UITK::AddFlatMenuItem(Menu, #Menu_OpenImages, -1, Language(#lng_AddImages))
+		UITK::AddFlatMenuItem(Menu, #Menu_OpenFolder, -1, Language(#lng_AddFolder))
 		UITK::AddFlatMenuSeparator(Menu, -1)
-		UITK::AddFlatMenuItem(Menu, #Menu_Settings, -1, "Preferences")
+		UITK::AddFlatMenuItem(Menu, #Menu_Settings, -1, Language(#lng_Menu_Preferences))
 		UITK::AddFlatMenuSeparator(Menu, -1)
-		UITK::AddFlatMenuItem(Menu, #Menu_Quit, -1, "Exit")
-		UITK::AddWindowMenu(Window, Menu, "Files")
+		UITK::AddFlatMenuItem(Menu, #Menu_Quit, -1, Language(#lng_Menu_Exit))
+		UITK::AddWindowMenu(Window, Menu, Language(#lng_Menu_Files))
 		
 		Menu = UITK::FlatMenu(General::ColorMode)
-		UITK::AddFlatMenuItem(Menu, #Menu_LoadTasks, -1, "Load task list")
-		UITK::AddFlatMenuItem(Menu, #Menu_SaveTasks, -1, "Save task list")
+		UITK::AddFlatMenuItem(Menu, #Menu_LoadTasks, -1, Language(#lng_Menu_LoadTasksList))
+		UITK::AddFlatMenuItem(Menu, #Menu_SaveTasks, -1, Language(#lng_Menu_SaveTasksList))
 		UITK::AddFlatMenuSeparator(Menu, -1)
-		UITK::AddFlatMenuItem(Menu, #Menu_ShowPreview, -1, "Show preview window")
-		UITK::AddWindowMenu(Window, Menu, "Tasks")
+		UITK::AddFlatMenuItem(Menu, #Menu_ShowPreview, -1, Language(#lng_Menu_DisplayPreview))
+		UITK::AddWindowMenu(Window, Menu, Language(#lng_Menu_Tasks))
 		
 		Menu = UITK::FlatMenu(General::ColorMode)
-		UITK::AddFlatMenuItem(Menu, #Menu_About, -1, "About Batchable")
-		UITK::AddFlatMenuItem(Menu, #Menu_Help, -1, "Usage guide")
-		UITK::AddFlatMenuItem(Menu, #Menu_VisitSite, -1, "Visit ♥x1")
-		UITK::AddWindowMenu(Window, Menu, "Help")
+		UITK::AddFlatMenuItem(Menu, #Menu_About, -1,  Language(#lng_Menu_About))
+		UITK::AddFlatMenuItem(Menu, #Menu_Help, -1, Language(#lng_Menu_Guide))
+		UITK::AddFlatMenuItem(Menu, #Menu_VisitSite, -1, Language(#lng_Menu_Website))
+		UITK::AddWindowMenu(Window, Menu, Language(#lng_Menu_Help))
 		
 		CreatePopupMenu(0) ;< ╯︿╰ can't bind menu event without that ...
 		
@@ -616,7 +669,7 @@
 				*Data\Image = FinalImage
 				
 			Else
-				*Data\Information = "Couldn't load the image"
+				*Data\Information = Language(#lng_Error_Loading)
 				*Data\ImageID = ImageID(ImageError)
 			EndIf
 		Else
@@ -733,6 +786,13 @@
 	DataSection
 		Icon:
 		IncludeBinary "../Media/Icon/Icon18.png"
+		
+		English:
+		IncludeFile "../Language/MainWindow/English.txt"
+		
+		French:
+		IncludeFile "../Language/MainWindow/Français.txt"
+		
 	EndDataSection
 EndModule
 
@@ -770,7 +830,8 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 336
-; Folding = tBAAAA9
+; CursorPosition = 788
+; FirstLine = 12
+; Folding = thAAAA9
 ; EnableXP
 ; DPIAware

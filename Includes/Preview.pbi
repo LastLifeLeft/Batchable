@@ -55,6 +55,7 @@
 	Declare Redraw()
 	Declare ProcessCurrentTask()
 	Declare ResizeThread(*ResizeData.ResizeData)
+	Declare Checkerboard(*ResizeData.ResizeData)
 	
 	;Public procedure
 	Procedure Open(Forced = #False)
@@ -64,7 +65,12 @@
 			EndIf
 		Else
 			ExamineDesktops()
-			Window = UITK::Window(#PB_Any, X, Y, Width, Height, General::#AppName + " Preview", UITK::#Window_CloseButton | #PB_Window_SizeGadget | (Bool(X = -1 And Y = -1) * #PB_Window_ScreenCentered) | #PB_Window_Invisible | General::ColorMode)
+			Select General::Language
+				Case "français"
+					Window = UITK::Window(#PB_Any, X, Y, Width, Height, General::#AppName + " Aperçu", UITK::#Window_CloseButton | #PB_Window_SizeGadget | (Bool(X = -1 And Y = -1) * #PB_Window_ScreenCentered) | #PB_Window_Invisible | General::ColorMode)
+				Default
+					Window = UITK::Window(#PB_Any, X, Y, Width, Height, General::#AppName + " Preview", UITK::#Window_CloseButton | #PB_Window_SizeGadget | (Bool(X = -1 And Y = -1) * #PB_Window_ScreenCentered) | #PB_Window_Invisible | General::ColorMode)
+			EndSelect
 			UITK::SetWindowBounds(Window, 800, 600, DesktopWidth(0), DesktopHeight(0)) ; A dirty hack to avoid flickering. Can't we resize a canvas without it reverting to white?
 			WindowColor = SetAlpha(UITK::WindowGetColor(Window, UITK::#Color_Parent), 255)
 			GadgetColor = SetAlpha(UITK::WindowGetColor(Window, UITK::#Color_Shade_Cold), 255)
@@ -177,10 +183,10 @@
 					*ResizeData = AllocateStructure(ResizeData)
 					
 					If VRatio < HRatio
-						*ResizeData\Height = CanvasHeight
+						*ResizeData\Height = General::Min(CanvasHeight, ImageHeight)
 						*ResizeData\Width = ImageWidth * VRatio
 					Else
-						*ResizeData\Width = CanvasWidth
+						*ResizeData\Width = General::Min(CanvasWidth, ImageWidth)
 						*ResizeData\Height = ImageHeight * HRatio
 					EndIf
 					
@@ -188,29 +194,22 @@
 					
 					ResizeThread = CreateThread(@ResizeThread(), *ResizeData)
 				EndIf
-				ProcedureReturn #False
 			Else
-				If ResizedImage
-					FreeImage(ResizedImage)
+				If ResizeThread
+					NextResize = #True
+				Else
+					*ResizeData = AllocateStructure(ResizeData)
+					
+					*ResizeData\Width = ImageWidth
+					*ResizeData\Height = ImageHeight
+					*ResizeData\Image = CopyImage(PreviewImage, #PB_Any)
+					
+					ResizeThread = CreateThread(@ResizeThread(), *ResizeData)
 				EndIf
-				
-				ResizedImage = CopyImage(PreviewImage, #PB_Any)
-				
-				StartVectorDrawing(ImageVectorOutput(ResizedImage))
-				AddPathBox(0, 0, VectorOutputWidth(), VectorOutputHeight())
-				VectorSourceImage(ImageID(CheckerboardPattern), 255, 16, 15, #PB_VectorImage_Repeat)
-				FillPath()
-				MovePathCursor(0, 0)
-				DrawVectorImage(ImageID(PreviewImage))
-				StopVectorDrawing()
-				
-				DisplayedWidth = ImageWidth
-				DisplayedHeight = ImageHeight
-				
 			EndIf
+		Else
+			Redraw()
 		EndIf
-		
-		Redraw()
 	EndProcedure
 	
 	;Private procedure
@@ -267,19 +266,10 @@
 		EndIf
 		
 		*ResizeData = EventData()
-		ResizedImage = CopyImage(*ResizeData\Image, #PB_Any)
+		ResizedImage = *ResizeData\Image
 		DisplayedWidth = *ResizeData\Width
 		DisplayedHeight = *ResizeData\Height
 		
-		StartVectorDrawing(ImageVectorOutput(ResizedImage))
-		AddPathBox(0, 0, VectorOutputWidth(), VectorOutputHeight())
-		VectorSourceImage(ImageID(CheckerboardPattern), 255, 16, 15, #PB_VectorImage_Repeat)
-		FillPath()
-		MovePathCursor(0, 0)
-		DrawVectorImage(ImageID(*ResizeData\Image))
-		StopVectorDrawing()
-		
-		FreeImage(*ResizeData\Image)
 		FreeStructure(*ResizeData)
 		
 		If Window
@@ -292,7 +282,6 @@
 			NextResize = #False
 			Resize()
 		EndIf
-		
 	EndProcedure
 	
 	Procedure Redraw()
@@ -337,9 +326,27 @@
 		EndIf
 	EndProcedure
 	
+	Procedure Checkerboard(*ResizeData.ResizeData)
+		Protected TempImage
+		
+		TempImage = CopyImage(*ResizeData\Image, #PB_Any)
+		
+		StartVectorDrawing(ImageVectorOutput(*ResizeData\Image))
+		AddPathBox(0, 0, VectorOutputWidth(), VectorOutputHeight())
+		VectorSourceImage(ImageID(CheckerboardPattern), 255, 16, 15, #PB_VectorImage_Repeat)
+		FillPath()
+		MovePathCursor(0, 0)
+		DrawVectorImage(ImageID(TempImage))
+		StopVectorDrawing()
+		
+		FreeImage(TempImage)
+		
+		PostEvent(#Update_Resize, 0, 0, 0, *ResizeData)
+	EndProcedure
+	
 	Procedure ResizeThread(*ResizeData.ResizeData)
 		ResizeImage(*ResizeData\Image, *ResizeData\Width, *ResizeData\Height, #PB_Image_Smooth)
-		PostEvent(#Update_Resize, 0, 0, 0, *ResizeData)
+		Checkerboard(*ResizeData)
 	EndProcedure
 	
 	BindEvent(#Update_PreviousTaskDone, @Handler_FinishPreviewBatch())
@@ -360,8 +367,8 @@
 	EndDataSection
 EndModule
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 203
-; FirstLine = 64
-; Folding = BIE-
+; CursorPosition = 354
+; FirstLine = 7
+; Folding = BAA-
 ; EnableXP
 ; DPIAware
