@@ -1,6 +1,6 @@
 ﻿Data.s "Français",
-"Add images...", "Add folder...", "Remove selected image", "Add Task...", "Task settings...", "Remove selected Task", "Start", "All", "Colors", "Transformation", "Pixel Art", "Other", "Files", "Preferences", "Exit", "Tasks", "Load task list",
-"Save task list", "Show preview window", "Help", "About Batchable", "Usage guide", "Visit ?x1", "Cancel", "Add to the queue", "Back", "Couldn't load the image"
+"Ajouter Images...", "Ajouter Dossier...", "Retirer Image sélectionnée", "Ajouter Tâche...", "Paramètres de Tâche...", "Retirer Tâche sélectionnée", " Démarrer", "Tout", "Couleurs", "Transformation", "Pixel Art", "Autres", "Fichiers", "Préférences", "Sortie", "Tâches", "Charger liste de Tâches",
+"Sauvegarder liste de tâches", "Afficher la fenêtre de prévisualisation", "Aide", "A propos de Batchable", "Guide d'utilisation", "Visiter ?x1", "Annuler", "Ajouter à la file d'attente", "Retour", "Pas pu charger l'image"
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
 ; CursorPosition = 2
 ; EnableXP
