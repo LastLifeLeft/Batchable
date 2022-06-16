@@ -11,7 +11,7 @@ Batchable is WYSIWYG batch image processing tool.
 - 🌍 Multilingual
 
 # Filters:
-- 🌈 Colors
+- 🌈 Colors:
   - Alpha Threshold
   - Black & White
   - Channel Swap
