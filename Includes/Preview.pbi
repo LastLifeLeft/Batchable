@@ -42,7 +42,7 @@
 	Global WindowColor, GadgetColor, Canvas
 	
 	Global ImagePath.s, OriginalImage.i, WorkImage.i, PreviewImage.i, ResizedImage.i
-	Global CanvasHeight, CanvasWidth, PreviewImageWidth, PreviewImageHeight, DisplayedWidth, DisplayedHeight
+	Global CanvasHeight, CanvasWidth, DisplayedWidth, DisplayedHeight
 	Global LoadingImage = CatchImage(#PB_Any, ?Loading)
 	Global BusyThread, NextWork, ResizeThread, NextResize, CheckerboardPattern
 	
@@ -367,7 +367,7 @@
 	EndDataSection
 EndModule
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 354
+; CursorPosition = 44
 ; FirstLine = 7
 ; Folding = BAA-
 ; EnableXP

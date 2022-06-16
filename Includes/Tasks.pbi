@@ -27,6 +27,7 @@
 		#lng_ChannelSwap_ChannelAlpha
 		
 		
+		
 		#__lng_count
 	EndEnumeration
 	
@@ -703,8 +704,7 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 588
-; FirstLine = 49
-; Folding = hNAAAAAAI--
+; CursorPosition = 29
+; Folding = hNAAAAAAIA+
 ; EnableXP
 ; DPIAware

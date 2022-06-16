@@ -5,10 +5,11 @@ IncludeFile "General.pbi"
 IncludeFile "MainWindow.pbi"
 IncludeFile "Tasks.pbi"
 IncludeFile "Preview.pbi"
+IncludeFile "Worker.pbi"
 
 If CountProgramParameters()
 	Select ProgramParameter(0)
-		Case "-Preview"
+		Case "-Worker"
 			
 		Case "-Portable"
 			General::Portable = #True

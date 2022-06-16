@@ -115,6 +115,11 @@ DeclareModule Preview
 	Declare Resize()
 EndDeclareModule
 
+DeclareModule Worker
+	
+	Declare Init()
+EndDeclareModule
+
 Module General
 	UseJPEG2000ImageDecoder()
 	UseJPEGImageDecoder()
@@ -156,8 +161,8 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 84
-; FirstLine = 42
-; Folding = 09
+; CursorPosition = 119
+; FirstLine = 31
+; Folding = 06
 ; EnableXP
 ; DPIAware
