@@ -26,3 +26,8 @@ Batchable is WYSIWYG batch image processing tool.
 - GPU Acceleration
 - More filters
 - Suggestions welcomed!
+
+
+[//]: # (Licences ici?)
+[//]: # (J'ai pris le Throbber là https://commons.wikimedia.org/wiki/File:Lightness_rotate_36f_cw.gif?uselang=en , il est sous CC BY SA )
+[//]: # (J'utilise aussi neuquant, libtiff, OpenJPEG, libpng, libjpeg)
