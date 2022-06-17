@@ -1,4 +1,4 @@
-# ![Icon](https://raw.githubusercontent.com/LastLifeLeft/Batchable/main/Media/Icon/Icon48.png) Batchable
+# ![Icon](https://raw.githubusercontent.com/LastLifeLeft/Batchable/main/Media/Icon/Icon32.png) Batchable
 
 Batchable is WYSIWYG batch image processing tool.
 
