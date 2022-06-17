@@ -2,7 +2,9 @@
 
 Batchable is WYSIWYG batch image processing tool.
 
-[//]: # (Screenshot de démo)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/LastLifeLeft/Batchable/main/Media/Demo.gif" />
+</p>
 
 # Features
 - 😊 Easy to use
