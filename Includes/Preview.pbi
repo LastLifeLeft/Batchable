@@ -144,7 +144,7 @@
 						TaskQueue()\Settings = *Data\TaskSettings
 					Next
 					
-					Tasks::Process(OriginalImage, TaskQueue(), #Update_PreviousTaskDone)
+					Tasks::Process(OriginalImage, TaskQueue(), General::#Update_PreviousTaskDone)
 					BusyThread = #True
 					PreviewImage = CopyImage(LoadingImage, #PB_Any)
 					
@@ -237,7 +237,9 @@
 		
 		WorkImage = EventData()
 		BusyThread = #False
-		ProcessCurrentTask()
+		If WorkImage
+			ProcessCurrentTask()
+		EndIf
 	EndProcedure
 	
 	Procedure Handler_FinishCurrentTask()
@@ -317,9 +319,9 @@
 			TaskQueue()\Settings = *Data\TaskSettings
 			
 			If WorkImage = 0
-				Tasks::Process(OriginalImage, TaskQueue(), #Update_CurrentTaskDone)
+				Tasks::Process(OriginalImage, TaskQueue(), General::#Update_CurrentTaskDone)
 			Else
-				Tasks::Process(WorkImage, TaskQueue(), #Update_CurrentTaskDone)
+				Tasks::Process(WorkImage, TaskQueue(), General::#Update_CurrentTaskDone)
 			EndIf
 		Else
 			NextWork = #True
@@ -341,7 +343,7 @@
 		
 		FreeImage(TempImage)
 		
-		PostEvent(#Update_Resize, 0, 0, 0, *ResizeData)
+		PostEvent(General::#Update_Resize, 0, 0, 0, *ResizeData)
 	EndProcedure
 	
 	Procedure ResizeThread(*ResizeData.ResizeData)
@@ -349,9 +351,9 @@
 		Checkerboard(*ResizeData)
 	EndProcedure
 	
-	BindEvent(#Update_PreviousTaskDone, @Handler_FinishPreviewBatch())
-	BindEvent(#Update_CurrentTaskDone, @Handler_FinishCurrentTask())
-	BindEvent(#Update_Resize, @Handler_FinishResize())
+	BindEvent(General::#Update_PreviousTaskDone, @Handler_FinishPreviewBatch())
+	BindEvent(General::#Update_CurrentTaskDone, @Handler_FinishCurrentTask())
+	BindEvent(General::#Update_Resize, @Handler_FinishResize())
 	
 	CheckerboardPattern = CreateImage(#PB_Any, 16, 16, 24, $FFFFFF)
 	StartVectorDrawing(ImageVectorOutput(CheckerboardPattern))
@@ -367,8 +369,7 @@
 	EndDataSection
 EndModule
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 44
-; FirstLine = 7
-; Folding = BAA-
+; CursorPosition = 253
+; Folding = BAC+
 ; EnableXP
 ; DPIAware

@@ -49,8 +49,12 @@
 		ThreadInterupt = #False
 		ThreadEndEvent = EndEvent
 		
-		CopyList(TaskQueue(), ThreadedQueue())
-		ThreadID = CreateThread(@ProcessThread(), CopyImage(Image, #PB_Any))
+ 		If Image
+			CopyList(TaskQueue(), ThreadedQueue())
+			ThreadID = CreateThread(@ProcessThread(), CopyImage(Image, #PB_Any))
+		Else
+			PostEvent(ThreadEndEvent, 0, 0, 0, 0)
+		EndIf
 		
 		ProcedureReturn 0
 	EndProcedure
@@ -123,7 +127,6 @@
 		Task(#Task_#TaskName)\IconID = ImageID(CatchImage(#PB_Any, ?TaskName))
 		Task(#Task_#TaskName)\Populate = @TaskName#_Populate()
 		Task(#Task_#TaskName)\CleanUp = @TaskName#_CleanUp()
-		Task(#Task_#TaskName)\Serialize = @TaskName#_Serialize()
 		Task(#Task_#TaskName)\Execute = @TaskName#_Execute()
 		Task(#Task_#TaskName)\DefaultSettings = AllocateMemory(SizeOf(TaskName#_Settings))
 	EndMacro
@@ -218,17 +221,6 @@
 		ClearMap(GadgetMap())
 	EndProcedure
 	
-	Procedure ColorBalance_Serialize(*Settings.ColorBalance_Settings)
-		Protected JSON = CreateJSON(#PB_Any), *Result, ComposedJSON.s
-		InsertJSONStructure(JSONValue(JSON), *Settings, ColorBalance_Settings)
-		ComposedJSON = ComposeJSON(JSON)
-		*Result = AllocateMemory(StringByteLength(ComposedJSON) + 2)
-		PokeS(*Result, ComposedJSON)
-		FreeJSON(JSON)
-		
-		ProcedureReturn *Result
-	EndProcedure
-	
 	Procedure ColorBalance_CustomCallback(x, y, SourceColor, TargetColor)
 		Protected *FilterSettings.ColorBalance_FilterSettings = *CustomCallbackSettings
 		Protected Red.c = Red(SourceColor) * *FilterSettings\Red
@@ -296,10 +288,6 @@
 		UnbindGadgetEvent(GadgetMap("Threshold Trackbar"), @AlphaThreshold_TrackBarHandler(), #PB_EventType_Change)
 		FreeGadget(GadgetMap("Threshold Trackbar"))
 		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Procedure AlphaThreshold_Serialize(*Settings.AlphaThreshold_Settings)
-		
 	EndProcedure
 	
 	Procedure AlphaThreshold_CustomCallback(x, y, SourceColor, TargetColor)
@@ -435,10 +423,6 @@
 		ClearMap(GadgetMap())
 	EndProcedure
 	
-	Procedure ChannelSwap_Serialize(*Settings.ChannelSwap_Settings)
-		
-	EndProcedure
-	
 	Procedure ChannelSwap_CustomCallback(x, y, SourceColor, TargetColor)
 		Protected *Settings.ChannelSwap_FilterSettings = *CustomCallbackSettings
 		*Settings\Channel[0] = Red(SourceColor)
@@ -500,10 +484,6 @@
 		ClearMap(GadgetMap())
 	EndProcedure
 	
-	Procedure Invertcolor_Serialize(*Settings.Invertcolor_Settings)
-		
-	EndProcedure
-	
 	Procedure Invertcolor_CustomCallback(x, y, SourceColor, TargetColor)
 		ProcedureReturn RGBA(255 - Red(SourceColor), 255 - Green(SourceColor), 255 - Blue(SourceColor), Alpha(SourceColor))
 	EndProcedure
@@ -537,10 +517,6 @@
 		FreeGadget(GadgetMap("Title Text"))
 		FreeGadget(GadgetMap("Description Text"))
 		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Procedure BlackAndWhite_Serialize(*Settings.BlackAndWhite_Settings)
-		
 	EndProcedure
 	
 	Procedure BlackAndWhite_CustomCallback(x, y, SourceColor, TargetColor)
@@ -577,10 +553,6 @@
 		FreeGadget(GadgetMap("Title Text"))
 		FreeGadget(GadgetMap("Description Text"))
 		ClearMap(GadgetMap())
-	EndProcedure
-	
-	Procedure Sepia_Serialize(*Settings.Sepia_Settings)
-		
 	EndProcedure
 	
 	Procedure Sepia_CustomCallback(x, y, SourceColor, TargetColor)
@@ -704,7 +676,8 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 29
-; Folding = hNAAAAAAIA+
+; CursorPosition = 556
+; FirstLine = 66
+; Folding = pNUAAAAAA+
 ; EnableXP
 ; DPIAware

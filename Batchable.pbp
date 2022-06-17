@@ -9,36 +9,36 @@
   <section name="data">
     <explorer view="C:\ProgramData\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2022-06-16 21:21" user="❤x1" host="MONSTRO"/>
+    <lastopen date="2022-06-17 23:29" user="❤x1" host="MONSTRO"/>
   </section>
   <section name="files">
     <file name="Includes\General.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="aaa16662f591061f0cf44eae98a09293"/>
+      <fingerprint md5="4bc891a34a7fc6754ea852958a8e0d81"/>
     </file>
     <file name="Includes\MainWindow.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="18f32a9245197c945b817ef9ef5248c5"/>
+      <fingerprint md5="a39716a3202694050dc826d3f20ebb71"/>
     </file>
     <file name="Includes\Preview.pbi">
-      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="0da3ea9e5bb2a1c879007855b7ce9ead"/>
+      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
+      <fingerprint md5="3476e3e5eedc45d9807583da7e2c6444"/>
     </file>
     <file name="Includes\Tasks.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="67eb4df2af828f00771de6a99d19596a"/>
-    </file>
-    <file name="Main.pb">
-      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
-      <fingerprint md5="f113021835fa4864b18ca1d2b7d9862e"/>
-    </file>
-    <file name="UI-Toolkit\Library\UI-Toolkit.pbi">
-      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="+++"/>
-      <fingerprint md5="fc87c173c77b32fbc64b366774ad101d"/>
+      <fingerprint md5="9b0e8e85b1a2200ac3feb51a06683ec4"/>
     </file>
     <file name="Includes\Worker.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="14ed6417c27f9dc2215fc402ee5fb02d"/>
+      <fingerprint md5="bd11db0de8af5d41243dd9e857f3dfe2"/>
+    </file>
+    <file name="Main.pb">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
+      <fingerprint md5="486a5f8f677afe8c13b0fceb63f37658"/>
+    </file>
+    <file name="UI-Toolkit\Library\UI-Toolkit.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="+++"/>
+      <fingerprint md5="6992ae843437334334a3febe2248050e"/>
     </file>
   </section>
   <section name="targets">

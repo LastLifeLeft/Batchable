@@ -1,7 +1,21 @@
 ﻿DeclareModule General
+	Enumeration #PB_Event_FirstCustomValue
+		#Update_PreviousTaskDone
+		#Update_CurrentTaskDone
+		#Update_Preview
+		#Update_Resize
+		
+		#Process_ItemDone
+	EndEnumeration
+	
 	#AppName = "Batchable"
+	#SaveVersion = 1
 	
 	Global ColorMode = UITK::#DarkMode, Portable = #False, Language.s
+	Global Settings_MaxThreadCount = CountCPUs(#PB_System_ProcessCPUs) - 1
+	; /!\CountCPUs() returns the number of thread, not the number of core. This might help : https://docs.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getlogicalprocessorinformation
+	
+	
 	
 	; Public procedure declarations
 	Declare Min(A, B)
@@ -72,7 +86,6 @@ DeclareModule Tasks
 	EndEnumeration
 	
 	Prototype Execute(Image, *Settings)
-	Prototype Serialize(*Settings)
 	Prototype Populate(*Settings)
 	Prototype CleanUp()
 	
@@ -82,7 +95,6 @@ DeclareModule Tasks
 		IconID.i
 		Type.i
 		Execute.Execute
-		Serialize.Serialize
 		Populate.Populate
 		CleanUp.CleanUp
 		*DefaultSettings
@@ -101,13 +113,6 @@ DeclareModule Tasks
 EndDeclareModule
 
 DeclareModule Preview
-	Enumeration #PB_Event_FirstCustomValue
-		#Update_PreviousTaskDone
-		#Update_CurrentTaskDone
-		#Update_Preview
-		#Update_Resize
-	EndEnumeration
-	
 	Global Window
 	
 	Declare Open(Forced = #False)
@@ -116,8 +121,11 @@ DeclareModule Preview
 EndDeclareModule
 
 DeclareModule Worker
+	Global NewList ImageList.s()
+	Global NewList TaskQueue.Tasks::Queue()
 	
 	Declare Init()
+	Declare Open()
 EndDeclareModule
 
 Module General
@@ -128,10 +136,11 @@ Module General
 	UseTGAImageDecoder()
 	UseTIFFImageDecoder()
 	
-	Global cchData
-	cchData = GetLocaleInfo_(#LOCALE_USER_DEFAULT, #LOCALE_SNATIVELANGNAME, @Language, 0)
-	Language = Space(cchData)
-	GetLocaleInfo_(#LOCALE_USER_DEFAULT, #LOCALE_SNATIVELANGNAME, @Language, cchData)
+	Portable = GetLocaleInfo_(#LOCALE_USER_DEFAULT, #LOCALE_SNATIVELANGNAME, @Language, 0)
+	Language = Space(Portable)
+	GetLocaleInfo_(#LOCALE_USER_DEFAULT, #LOCALE_SNATIVELANGNAME, @Language, Portable)
+	
+	Portable = #False
 	
 	Select Language
 		Case "français"
@@ -161,8 +170,8 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 119
-; FirstLine = 31
-; Folding = 06
+; CursorPosition = 96
+; FirstLine = 66
+; Folding = -6
 ; EnableXP
 ; DPIAware

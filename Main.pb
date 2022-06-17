@@ -8,10 +8,10 @@ IncludeFile "Preview.pbi"
 IncludeFile "Worker.pbi"
 
 If CountProgramParameters()
-	Select ProgramParameter(0)
-		Case "-Worker"
-			
-		Case "-Portable"
+	Select LCase(ProgramParameter(0))
+		Case "-worker"
+			Worker::Init()
+		Case "-portable"
 			General::Portable = #True
 	EndSelect
 EndIf
@@ -29,6 +29,6 @@ ForEver
 
 
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 7
+; CursorPosition = 13
 ; EnableXP
 ; DPIAware

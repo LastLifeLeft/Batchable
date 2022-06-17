@@ -109,15 +109,18 @@
 		
 		#lng_Error_Loading
 		
+		#lng_SaveTaskListAs
+		#lng_LoadTaskList
+		
 		#__lng_size
 	EndEnumeration
 	
 	Global ImageList, ImageContainer, ButtonAddImage, ButtonAddFolder, ButtonRemoveImage, TaskContainer, ButtonAddTask, ButtonSetupTask, ButtonRemoveTask, ButtonProcess, NewTaskContainer, NewTaskReturnButton, NewTaskCombo, NewTaskList, NewTaskButton
-	Global TaskSettingContainer, TaskSettingReturnButton, NewList TaskSettingList()
+	Global TaskSettingContainer, TaskSettingReturnButton
 	Global BoldFont = FontID(LoadFont(#PB_Any, "Segoe UI", 9, #PB_Font_HighQuality | #PB_Font_Bold))
-	Global ImageLoading, ImageError, ImageLoadingID
-	Global PreviewMutex, MiniatureThreat, NewList PreviewList.PreviewLoading()
-	Global Menu, PreviewCheckerboard
+	Global ImageLoading, ImageError, ImageCheckerboard
+	Global PreviewMutex, MiniatureThread, NewList PreviewList.PreviewLoading()
+	Global Menu
 	Global Dim Language.s(#__lng_size - 1)
 	
 	#SupportedFileTypes = "jpgjpegpngbmptifftga"
@@ -137,7 +140,7 @@
 	AddPathLine(10, -10, #PB_Path_Relative)
 	StrokePath(3)
 	StopVectorDrawing()
-	ImageLoadingID = ImageID(ImageLoading)
+	ImageLoading = ImageID(ImageLoading)
 	
 	ImageError = CreateImage(#PB_Any, 94, 70, 24, FixColor($202225))
 	StartVectorDrawing(ImageVectorOutput(ImageError))
@@ -148,6 +151,7 @@
 	AddPathLine(-30, 30, #PB_Path_Relative)
 	StrokePath(4)
 	StopVectorDrawing()
+	ImageError = ImageID(ImageError)
 	
 	Enumeration ;Menu
 		#Menu_OpenImages
@@ -176,6 +180,7 @@
 	Declare Handler_AddImage()
 	Declare Handler_AddFolder()
 	Declare Handler_RemoveImage()
+	Declare Handler_Process()
 	
 	Declare Handler_TaskList()
 	Declare Handler_TaskList_Keyboard()
@@ -189,6 +194,11 @@
 	Declare Handler_NewTaskReturn()
 	
 	Declare Handler_Menu_Preview()
+	Declare Handler_Menu_LoadTaskList()
+	Declare Handler_Menu_SaveTaskList()
+	Declare Handler_Menu_About()
+	Declare Handler_Menu_LastLife()
+	
 	
 	Declare Handler_TaskSettingReturn()
 	
@@ -207,8 +217,8 @@
 	Procedure Open()
 		Protected Loop, TempImage
 		
-		PreviewCheckerboard = CreateImage(#PB_Any, 128, 128, 24, FixColor($FFFFFF))
-		StartVectorDrawing(ImageVectorOutput(PreviewCheckerboard))
+		ImageCheckerboard = CreateImage(#PB_Any, 128, 128, 24, FixColor($FFFFFF))
+		StartVectorDrawing(ImageVectorOutput(ImageCheckerboard))
 		For Loop = 0 To 128 Step 16
 			AddPathBox(Loop, 0, 8, 128)
 			AddPathBox(0, Loop, 128, 8)
@@ -216,6 +226,7 @@
 		VectorSourceColor(SetAlpha($BFBFBF, 255))
 		FillPath()
 		StopVectorDrawing()
+		ImageCheckerboard = ImageID(ImageCheckerboard)
 		
 		Select General::Language
 			Case "français"
@@ -287,6 +298,8 @@
 		ButtonProcess = UITK::Button(#PB_Any, #Iconbar_Offset * 4 + #Iconbar_Size * 3, #Iconbar_Offset, #Iconbar_Size, #Iconbar_Size, "")
 		SetButtonColor(ButtonProcess, GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), GetGadgetColor(ImageList, UITK::#Color_Shade_Cold), $3AA55D, $6BD08B, $FAFAFB, $FAFAFB, Language(#lng_Process), "h")
 		UITK::Disable(ButtonProcess, #True)
+		BindGadgetEvent(ButtonProcess, @Handler_Process(), #PB_EventType_Change)
+		
 		CloseGadgetList()
 		
 		NewTaskContainer = UITK::Container(#PB_Any, #Window_Margin * 2 + #ImageList_Width, #MenuBar_Height + #Window_Margin, #Window_Width - (#Window_Margin * 3 + #ImageList_Width), #Window_Height - #MenuBar_Height - #Window_Margin * 2)
@@ -357,8 +370,8 @@
 		UITK::AddFlatMenuItem(Menu, #Menu_OpenImages, -1, Language(#lng_AddImages))
 		UITK::AddFlatMenuItem(Menu, #Menu_OpenFolder, -1, Language(#lng_AddFolder))
 		UITK::AddFlatMenuSeparator(Menu, -1)
-		UITK::AddFlatMenuItem(Menu, #Menu_Settings, -1, Language(#lng_Menu_Preferences))
-		UITK::AddFlatMenuSeparator(Menu, -1)
+; 		UITK::AddFlatMenuItem(Menu, #Menu_Settings, -1, Language(#lng_Menu_Preferences))
+; 		UITK::AddFlatMenuSeparator(Menu, -1)
 		UITK::AddFlatMenuItem(Menu, #Menu_Quit, -1, Language(#lng_Menu_Exit))
 		UITK::AddWindowMenu(Window, Menu, Language(#lng_Menu_Files))
 		
@@ -371,7 +384,7 @@
 		
 		Menu = UITK::FlatMenu(General::ColorMode)
 		UITK::AddFlatMenuItem(Menu, #Menu_About, -1,  Language(#lng_Menu_About))
-		UITK::AddFlatMenuItem(Menu, #Menu_Help, -1, Language(#lng_Menu_Guide))
+; 		UITK::AddFlatMenuItem(Menu, #Menu_Help, -1, Language(#lng_Menu_Guide))
 		UITK::AddFlatMenuItem(Menu, #Menu_VisitSite, -1, Language(#lng_Menu_Website))
 		UITK::AddWindowMenu(Window, Menu, Language(#lng_Menu_Help))
 		
@@ -380,6 +393,12 @@
 		BindMenuEvent(0, #Menu_OpenImages, @Handler_AddImage())
 		BindMenuEvent(0, #Menu_OpenFolder, @Handler_AddFolder())
 		BindMenuEvent(0, #Menu_Quit, @Handler_Close())
+		
+		BindMenuEvent(0, #Menu_SaveTasks, @Handler_Menu_SaveTaskList())
+		BindMenuEvent(0, #Menu_LoadTasks, @Handler_Menu_LoadTaskList())
+		
+		BindMenuEvent(0, #Menu_About, @Handler_Menu_About())
+		BindMenuEvent(0, #Menu_VisitSite, @Handler_Menu_LastLife())
 		
 		BindMenuEvent(0, #Menu_ShowPreview, @Handler_Menu_Preview())
 		
@@ -504,11 +523,11 @@
 	Procedure Handler_RemoveImage()
 		Protected State = GetGadgetState(ImageList), *Data.OriginalImageInfo = GetGadgetItemData(ImageList, State)
 		
-		If *Data\ImageID = ImageLoadingID
+		If *Data\ImageID = ImageLoading
 			*Data\Image = -1
 		Else
 			If *Data\Image
-				*Data\ImageID = ImageID(ImageError)
+				*Data\ImageID = ImageError
 				FreeImage(*Data\Image)
 			EndIf
 			FreeStructure(*Data)
@@ -516,6 +535,28 @@
 		
 		RemoveGadgetItem(ImageList, State)
 			
+	EndProcedure
+	
+	Procedure Handler_Process()
+		Protected Loop, Count = CountGadgetItems(ImageList) - 1, *OriginalImageInfo.OriginalImageInfo, *TaskListInfo.TaskListInfo
+		
+		For Loop = 0 To Count
+			*OriginalImageInfo = GetGadgetItemData(ImageList, Loop)
+			AddElement(Worker::ImageList())
+			Worker::ImageList() =  *OriginalImageInfo\File
+		Next
+		
+		Count = CountGadgetItems(TaskList) - 1
+		
+		For Loop = 0 To Count
+			*TaskListInfo = GetGadgetItemData(TaskList, Loop)
+			AddElement(Worker::TaskQueue())
+			Worker::TaskQueue()\ID = *TaskListInfo\TaskID
+			Worker::TaskQueue()\Settings = *TaskListInfo\TaskSettings
+		Next
+		
+		Worker::Open()
+		
 	EndProcedure
 	
 	Procedure Handler_TaskList()
@@ -607,9 +648,92 @@
 		SetupingTask = #False
 	EndProcedure
 	
+	Procedure Handler_Menu_LoadTaskList()
+		Protected FileName.s, File, Loop, Count = CountGadgetItems(TaskList), Size
+		Protected *Data.TaskListInfo
+		
+		FileName = OpenFileRequester(Language(#lng_LoadTaskList), "", "Batchable TaskList (*.btl)|*.btl", 0)
+		
+		If Not FileName = #Null$
+			File = ReadFile(#PB_Any, FileName)
+			If File
+				If ReadString(File, #PB_Ascii, 4) = "BTLv" 
+					If ReadWord(File) <= General::#SaveVersion
+						
+						If Count
+							Count -1
+							For Loop = 0 To Count
+								*Data.TaskListInfo = GetGadgetItemData(TaskList, 0)
+								FreeMemory(*Data\TaskSettings)
+								FreeStructure(*Data)
+								RemoveGadgetItem(TaskList, 0)
+							Next
+						EndIf
+						
+						Repeat
+							*Data.TaskListInfo = AllocateStructure(TaskListInfo)
+							*Data\TaskID = ReadAsciiCharacter(File)
+							Size = ReadLong(File)
+							*Data\TaskSettings =  AllocateMemory(Size)
+							ReadData(File, *Data\TaskSettings, Size)
+							*Data\ImageID = Tasks::Task(*Data\TaskID)\IconID
+							*Data\Description = Tasks::Task(*Data\TaskID)\Description
+							SetGadgetItemData(TaskList, AddGadgetItem(TaskList, -1, Tasks::Task(*Data\TaskID)\Name), *Data)
+						Until Eof(File)
+					Else
+						
+					EndIf
+				Else
+					
+				EndIf
+				CloseFile(File)
+			EndIf
+		EndIf
+	EndProcedure
+	
+	Procedure Handler_Menu_SaveTaskList()
+		Protected FileName.s, File, Count = CountGadgetItems(TaskList), Loop, *Data.MainWindow::TaskListInfo
+		
+		If Count
+			Count - 1
+			
+			FileName = SaveFileRequester(Language(#lng_SaveTaskListAs), "", "Batchable TaskList (*.btl)|*.btl", 0)
+			
+			If Not FileName = #Null$
+				If LCase(GetExtensionPart(FileName)) <> "btl"
+					FileName + ".btl"
+				EndIf
+				
+				File = CreateFile(#PB_Any, FileName)
+				If File
+					WriteString(File, "BTLv", #PB_Ascii)
+					WriteWord(File, General::#SaveVersion)
+					
+					For Loop = 0 To Count
+						*Data = GetGadgetItemData(TaskList, Loop)
+						WriteAsciiCharacter(File, *Data\TaskID)
+						WriteLong(File, MemorySize(*Data\TaskSettings))
+						WriteData(File, *Data\TaskSettings, MemorySize(*Data\TaskSettings))
+					Next
+					
+					CloseFile(File)
+				EndIf
+			EndIf
+		EndIf
+	EndProcedure
+	
 	Procedure Handler_Menu_Preview()
 		Preview::Open()
 	EndProcedure
+	
+	Procedure Handler_Menu_About()
+		RunProgram("https://github.com/LastLifeLeft/Batchable")
+	EndProcedure
+	
+	Procedure Handler_Menu_LastLife()
+		RunProgram("http://lastlife.net")
+	EndProcedure
+	
 	
 	Procedure Handler_Close()
 		TerminateProcess_(OpenProcess_(#PROCESS_TERMINATE, #False, GetCurrentProcessId_()), 0) ;< I clearly have issues with my windows, but killing the process is a valid workaround for my own ineptitude.
@@ -626,7 +750,7 @@
 		DeleteElement(PreviewList())
 		
 		If ListSize(PreviewList()) = 0
-			MiniatureThreat = 0
+			MiniatureThread = 0
 			Finished = #True
 		EndIf
 		UnlockMutex(PreviewMutex)
@@ -661,7 +785,7 @@
 				
 				StartDrawing(ImageOutput(FinalImage))
 				ClipOutput(X, Y, ImageWidth, ImageHeight) 
-				DrawImage(ImageID(PreviewCheckerboard), X, Y)
+				DrawImage(ImageCheckerboard, X, Y)
 				DrawAlphaImage(ImageID(Image), X, Y)
 				StopDrawing()
 				FreeImage(Image)
@@ -671,7 +795,7 @@
 				
 			Else
 				*Data\Information = Language(#lng_Error_Loading)
-				*Data\ImageID = ImageID(ImageError)
+				*Data\ImageID = ImageError
 			EndIf
 		Else
 			FreeStructure(*Data)
@@ -728,7 +852,7 @@
 					NewImageToProcess = #True
 					
 					*Data = AllocateStructure(OriginalImageInfo)
-					*Data\ImageID = ImageLoadingID
+					*Data\ImageID = ImageLoading
 					*Data\Information = "Loading..."
 					Path = GetPathPart(File)
 					*Data\Path = Left(Path, Len(Path) -1)
@@ -749,8 +873,8 @@
 			EndIf
  		Next
  		
- 		If MiniatureThreat = 0 And NewImageToProcess
- 			MiniatureThreat = CreateThread(@Thread_LoadMiniature(), #Null)
+ 		If MiniatureThread = 0 And NewImageToProcess
+ 			MiniatureThread = CreateThread(@Thread_LoadMiniature(), #Null)
  		EndIf
  		
  		If CountGadgetItems(ImageList) And CountGadgetItems(TaskList)
@@ -831,7 +955,8 @@ EndModule
 
 
 ; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 552
-; Folding = thAAAA9
+; CursorPosition = 401
+; FirstLine = 341
+; Folding = t0AAAAA+
 ; EnableXP
 ; DPIAware
