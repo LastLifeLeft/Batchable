@@ -1,6 +1,6 @@
 # ![Icon](https://raw.githubusercontent.com/LastLifeLeft/Batchable/main/Media/Icon/Icon32.png) Batchable
 
-Batchable is WYSIWYG batch image processing tool.
+Batchable is a WYSIWYG batch image processing tool.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/LastLifeLeft/Batchable/main/Media/Demo.gif" />
