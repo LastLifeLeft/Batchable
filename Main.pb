@@ -1,4 +1,4 @@
-﻿IncludeFile "UI-Toolkit/Library/UI-Toolkit.pbi"
+﻿IncludeFile "Libraries/UI-Toolkit.pbi"
 
 IncludePath "Includes"
 IncludeFile "General.pbi"
@@ -28,7 +28,7 @@ Repeat
 ForEver
 
 
-; IDE Options = PureBasic 6.00 Beta 9 (Windows - x64)
-; CursorPosition = 13
+; IDE Options = PureBasic 6.20 (Windows - x64)
+; CursorPosition = 5
 ; EnableXP
 ; DPIAware
